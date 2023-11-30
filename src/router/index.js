@@ -4,7 +4,7 @@ import HomePage from "../views/Homepage.vue"
 const history = createWebHashHistory(import.meta.env.BASE_URL)
 const routes = [
   { path: "/", name: "Home", component: HomePage },
-  { path: "/rainfall", name: "RainFall" },
+  { path: "/rainfall", name: "Rain Fall" },
   { path: "/subscribe", name: "Subscribe" },
   { path: "/report", name: "Report Bug" }
 ]

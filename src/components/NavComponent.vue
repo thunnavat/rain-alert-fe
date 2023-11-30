@@ -50,6 +50,5 @@ function changePage(route) {
 
 .navSpan:hover {
   background-color: black;
-  cursor: pointer;
 }
 </style>

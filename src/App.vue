@@ -2,36 +2,44 @@
 import BtnComponent from "./components/BtnComponent.vue"
 import NavComponent from "./components/NavComponent.vue"
 import { ref } from "vue"
+import router from "./router"
 
 let btnProp = {
   btnName: "Login",
-  iconPath: "src/assets/vue.svg",
+  iconPath: "src/assets/LoginIcon.svg",
   iconAlt: "LoginIcon",
   class: "login"
 }
 
-let navNames = ["Home", "RainFall", "Subscribe", "Report Bug"]
+let navNames = ["Home", "Rain Fall", "Subscribe", "Report Bug"]
 
 let navSelected = ref("")
 
 function login() {}
+
+function navigateToHome() {
+  router.push({ name: "Home" })
+  navSelected.value = "Home"
+}
 </script>
 
 <template>
   <div class="header">
     <span class="navBar">
       <img
-        style="padding-right: 5em"
-        src="vite.svg"
+        src="./assets/HomeIcon.png"
+        style="padding-right: 1em"
+        width="180"
+        height="100"
+        @click="navigateToHome()"
       />
       <NavComponent
         :nav-names="navNames"
         :nav-selected="navSelected"
         @click="navSelected = ''"
       />
-    </span>
-    <span class="loginBtn">
       <BtnComponent
+        class="loginBtn"
         :btn-property="btnProp"
         @click="login()"
       />
@@ -41,8 +49,8 @@ function login() {}
   <div class="footer">
     <div class="footer-link">
       <router-link
-        :to="{ name: 'RainFall' }"
-        @click="navSelected = 'RainFall'"
+        :to="{ name: 'Rain Fall' }"
+        @click="navSelected = 'Rain Fall'"
         >Rain Check</router-link
       >
       <router-link
@@ -67,18 +75,22 @@ function login() {}
   margin-bottom: 3em;
   margin-top: 1em;
   display: flex;
+  align-items: center;
 }
+
 .navBar {
   display: flex;
-  padding-left: 2em;
+  align-items: center;
+}
+
+.navBar:hover {
+  cursor: pointer;
 }
 .loginBtn {
   position: absolute;
   right: 5em;
-  margin-top: 8px;
-  padding: 5px;
-  width: 120px;
-  height: 50px;
+  margin-top: 0.4em;
+  padding: 8px;
   border-radius: 10px;
   background-color: #171717;
 }

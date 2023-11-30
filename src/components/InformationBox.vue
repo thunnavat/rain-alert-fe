@@ -50,7 +50,9 @@ img {
 
 .RightToLeft {
   position: relative;
-  top: -33px;
+  top: -20px;
+  font-size: 40px;
+  font-family: "Space Mono";
   animation: RightToLeft 30s infinite linear;
 }
 
@@ -71,7 +73,7 @@ img {
   border-radius: 10px;
 }
 .info {
-  padding: 1px 10px;
+  padding: 1px 20px;
   width: 15em;
   background-image: linear-gradient(rgb(69, 67, 67), black);
   border: thin solid grey;
@@ -81,6 +83,10 @@ img {
 
 .subHeader {
   position: relative;
-  top: -10px;
+  top: -7px;
+  padding-bottom: 5px;
+  font-family: "Space Mono";
+  /* font-weight: 400; */
+  font-size: 13px;
 }
 </style>

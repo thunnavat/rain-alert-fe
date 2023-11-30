@@ -6,26 +6,27 @@ const infoBoxs = [
       "Bangkok and Perimeters | Isolated thundershowers. Minimum temperature 25-26 °C. Maximum temperature 33-36 °C. Easterly winds 10-25 km/hr."
   }
 ]
+const iconPath = "src/assets/rain-status/"
 const favorites = [
   {
     district: "Bangkok noi",
     status: "Heavy rain",
-    icon: "vite.svg"
+    icon: iconPath + "heavy-rain.svg"
   },
   {
     district: "Phasi Charon",
     status: "Moderate rain",
-    icon: "vite.svg"
+    icon: iconPath + "moderate-rain.svg"
   },
   {
     district: "Thung kru",
     status: "Light rain",
-    icon: "vite.svg"
+    icon: iconPath + "light-rain.svg"
   },
   {
     district: "Wang thong lang",
     status: "No rain",
-    icon: "vite.svg"
+    icon: iconPath + "no-rain.svg"
   }
 ]
 </script>
@@ -52,11 +53,14 @@ const favorites = [
   padding: 6em;
   margin-left: 2em;
   margin-right: 3em;
-  background-color: burlywood;
+  background-image: url("../assets/Title_Background.png");
+  background-repeat: no-repeat;
+  background-size: cover;
   border-radius: 10px;
 }
 
 .header-text {
+  font-size: 60px;
   background-image: linear-gradient(yellow, white);
   -webkit-background-clip: text;
   background-clip: text;
