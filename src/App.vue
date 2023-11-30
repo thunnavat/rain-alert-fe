@@ -1,44 +1,113 @@
 <script setup>
-import HelloWorld from "./components/HelloWorld.vue"
+import BtnComponent from "./components/BtnComponent.vue"
+import NavComponent from "./components/NavComponent.vue"
+import { ref } from "vue"
+import router from "./router"
+
+let btnProp = {
+  btnName: "Login",
+  iconPath: "src/assets/LoginIcon.svg",
+  iconAlt: "LoginIcon",
+  class: "login"
+}
+
+let navNames = ["Home", "Rain Fall", "Subscribe", "Report Bug"]
+
+let navSelected = ref("")
+
+function login() {}
+
+function navigateToHome() {
+  router.push({ name: "Home" })
+  navSelected.value = "Home"
+}
 </script>
 
 <template>
-  <div>
-    <a
-      href="https://vitejs.dev"
-      target="_blank"
-    >
+  <div class="header">
+    <span class="navBar">
       <img
-        src="/vite.svg"
-        class="logo"
-        alt="Vite logo"
+        src="./assets/HomeIcon.png"
+        style="padding-right: 1em"
+        width="180"
+        height="100"
+        @click="navigateToHome()"
       />
-    </a>
-    <a
-      href="https://vuejs.org/"
-      target="_blank"
-    >
-      <img
-        src="./assets/vue.svg"
-        class="logo vue"
-        alt="Vue logo"
+      <NavComponent
+        :nav-names="navNames"
+        :nav-selected="navSelected"
+        @click="navSelected = ''"
       />
-    </a>
+      <BtnComponent
+        class="loginBtn"
+        :btn-property="btnProp"
+        @click="login()"
+      />
+    </span>
   </div>
-  <HelloWorld msg="Vite + Vue" />
+  <router-view></router-view>
+  <div class="footer">
+    <div class="footer-link">
+      <router-link
+        :to="{ name: 'Rain Fall' }"
+        @click="navSelected = 'Rain Fall'"
+        >Rain Check</router-link
+      >
+      <router-link
+        :to="{ name: 'Subscribe' }"
+        @click="navSelected = 'Subscribe'"
+        >Subscribe</router-link
+      >
+      <router-link
+        :to="{ name: 'Report Bug' }"
+        @click="navSelected = 'Report Bug'"
+        >Report Bug</router-link
+      >
+    </div>
+    <span style="color: #575757"
+      >© 2023 Rain Alert - All Rights Reserved.</span
+    >
+  </div>
 </template>
 
 <style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+.header {
+  margin-bottom: 3em;
+  margin-top: 1em;
+  display: flex;
+  align-items: center;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+
+.navBar {
+  display: flex;
+  align-items: center;
 }
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+
+.navBar:hover {
+  cursor: pointer;
+}
+.loginBtn {
+  position: absolute;
+  right: 5em;
+  margin-top: 0.4em;
+  padding: 8px;
+  border-radius: 10px;
+  background-color: #171717;
+}
+
+.footer {
+  border-top: 1px solid #121212;
+  width: 70%;
+  margin: auto;
+  margin-top: 3em;
+}
+
+.footer-link {
+  display: flex;
+  justify-content: space-evenly;
+  width: 30%;
+  align-self: center;
+  margin: auto;
+  padding: 3em;
 }
 </style>
