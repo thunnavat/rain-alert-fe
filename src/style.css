@@ -16,6 +16,7 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+  max-width: 99%;
 }
 
 a {
@@ -29,7 +30,6 @@ a:hover {
 
 body {
   width: 100%;
-  overflow-x: hidden;
   /* min-width: 320px; */
   /* min-height: 100vh; */
 }
