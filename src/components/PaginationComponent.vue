@@ -12,25 +12,26 @@ const getTotalPage = computed(() => {
   const pages = ref([])
   let onsides = 1
   for (let i = 1; i <= props.totalPage; i++) {
-
     if (
       i == 1 ||
-      (selectedPage.value - onsides <= i && selectedPage.value + onsides >= i) ||
+      (selectedPage.value - onsides <= i &&
+        selectedPage.value + onsides >= i) ||
       i == selectedPage.value ||
       i == props.totalPage
     ) {
       pages.value.push(i)
-    } else if (
-      i == selectedPage.value + (onsides + 1)
-    ) {
+    } else if (i == selectedPage.value + (onsides + 1)) {
       pages.value.push("...")
     }
   }
-  console.log(pages.value)
   return pages.value
 })
 
 function navigate(page) {
+  if (props.totalPage <= selectedPage.value) {
+    selectedPage.value = props.totalPage
+  }
+
   if (page == "forward" && selectedPage.value < props.totalPage) {
     selectedPage.value += 1
   } else if (page == "backward" && selectedPage.value > 1) {
@@ -43,7 +44,10 @@ function navigate(page) {
 </script>
 
 <template>
-  <div class="pages">
+  <div
+    v-if="totalPage != 0"
+    class="pages"
+  >
     <div
       :class="totalPage == 1 || selectedPage == 1 ? 'disabled' : ''"
       class="page"

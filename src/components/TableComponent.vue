@@ -1,15 +1,15 @@
 <script setup>
 import { ref, computed } from "vue"
-import PaginationComponent from './PaginationComponent.vue'
+import PaginationComponent from "./PaginationComponent.vue"
+import DropDownComponent from "./DropDownComponent.vue"
+const emits = defineEmits(["selectedValue", "sortBy", "selectedStatus"])
+
 const props = defineProps({
   options: { type: Array, default: () => [] },
   headers: { type: Array, default: () => [] },
   columns: { type: Array, default: () => [] },
   mode: { type: String, default: "" }
 })
-
-const selectedValue = ref(props.options[0])
-
 const search = ref("")
 
 const showContent = ref(5)
@@ -18,29 +18,44 @@ const page = ref(1)
 
 const start = ref(showContent.value * (page.value - 1))
 
-const end = ref(page.value == 1 ? showContent.value : showContent.value * page.value)
+const end = ref(
+  page.value == 1 ? showContent.value : showContent.value * page.value
+)
 
-const totalPage = ref(Math.ceil(Math.round(props.columns.length) / Math.round(showContent.value)))
+// const totalPage = ref(Math.ceil(Math.round(props.columns.length) / Math.round(showContent.value)))
+const totalPage = computed(() => {
+  return Math.ceil(
+    Math.round(props.columns.length) / Math.round(showContent.value)
+  )
+})
 
-
-function selectedSize (size) {
+function selectedSize(size) {
   showContent.value = size
   start.value = showContent.value * (page.value - 1)
-  end.value = page.value == 1 ? showContent.value : showContent.value * page.value
-  totalPage.value = Math.ceil(Math.round(props.columns.length) / Math.round(showContent.value))
+  end.value =
+    page.value == 1 ? showContent.value : showContent.value * page.value
+  totalPage.value = Math.ceil(
+    Math.round(props.columns.length) / Math.round(showContent.value)
+  )
 }
 
-function selectedPage (pg) {
+function selectedPage(pg) {
   page.value = pg
   start.value = showContent.value * (page.value - 1)
-  end.value = page.value == 1 ? showContent.value : showContent.value * page.value
+  end.value =
+    page.value == 1 ? showContent.value : showContent.value * page.value
+}
+
+function changeSelectedValue(selectedValue) {
+  emits("selectedValue", selectedValue)
 }
 
 const filteredDistrict = computed(() => {
   if (search.value == "") {
     return props.columns.slice(start.value, end.value)
   } else if (search.value != "") {
-    return props.columns.filter((col) => {
+    return props.columns
+      .filter((col) => {
         return col.district.toLowerCase().includes(search.value.toLowerCase())
       })
       .slice(start.value, end.value)
@@ -48,10 +63,21 @@ const filteredDistrict = computed(() => {
 
   return ""
 })
+
+function sortBy(sorted) {
+  emits("sortBy", sorted)
+}
+
+function selectedStatus(selectStatus) {
+  emits("selectedStatus", selectStatus)
+}
 </script>
 
 <template>
-  <div class="table">
+  <div
+    v-if="options.length != 0"
+    class="table"
+  >
     <div v-if="mode == 'districtReport'">
       <div class="header">
         <h3>Rain reports</h3>
@@ -68,20 +94,11 @@ const filteredDistrict = computed(() => {
         />
         <div class="time">
           <span class="text-sm">Report time</span>
-          <select
-            v-model="selectedValue"
-            name="time"
-            class="bg-blue-400 hover:bg-blue-500 p-3.5 px-10 rounded-xl mx-3 cursor-pointer text-xs font-bold"
-            @click="console.log(selectedValue)"
-          >
-            <option
-              v-for="(option, index) in options"
-              :key="index"
-              :value="option"
-            >
-              {{ option }}
-            </option>
-          </select>
+          <DropDownComponent
+            :options="options"
+            :type="'dropdown'"
+            @selected-value="changeSelectedValue"
+          />
         </div>
       </div>
     </div>
@@ -96,13 +113,19 @@ const filteredDistrict = computed(() => {
           :style="
             header == headers[0]
               ? 'padding-left: 3em'
-              : '' 
-            || filteredDistrict.length == 0
+              : '' || filteredDistrict.length == 0
               ? 'padding-right: 10em'
               : ''
           "
         >
           {{ header }}
+          <DropDownComponent
+            :type="'icon'"
+            :icon-name="header.toLowerCase()"
+            :options="['No rain', 'Light rain', 'Moderate rain', 'Heavy rain']"
+            @sort-by="sortBy"
+            @selected-status="selectedStatus"
+          />
         </div>
         <div
           v-for="(col, i) in filteredDistrict"
@@ -118,7 +141,11 @@ const filteredDistrict = computed(() => {
         </div>
       </div>
     </div>
-    <PaginationComponent :total-page="totalPage" @selected-size="selectedSize" @selected-page="selectedPage"/>
+    <PaginationComponent
+      :total-page="totalPage"
+      @selected-size="selectedSize"
+      @selected-page="selectedPage"
+    />
   </div>
 </template>
 
@@ -162,7 +189,7 @@ select {
   appearance: none;
 }
 
-select:focus { 
+select:focus {
   outline: none;
   background-size: 33px;
   background-repeat: no-repeat;
@@ -170,7 +197,7 @@ select:focus {
   appearance: none;
 }
 
-select:focus { 
+select:focus {
   outline: none;
   background-size: 33px;
   background-repeat: no-repeat;
@@ -178,8 +205,8 @@ select:focus {
   appearance: none;
 }
 
-select:focus { 
-    outline: none;
+select:focus {
+  outline: none;
 }
 
 .heavy-rain {
