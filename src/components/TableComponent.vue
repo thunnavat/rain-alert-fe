@@ -22,6 +22,7 @@ const end = ref(page.value == 1 ? showContent.value : showContent.value * page.v
 
 const totalPage = ref(Math.ceil(Math.round(props.columns.length) / Math.round(showContent.value)))
 
+
 function selectedSize (size) {
   showContent.value = size
   start.value = showContent.value * (page.value - 1)
@@ -160,8 +161,25 @@ select {
   background-position: calc(100% - 0.25rem);
   appearance: none;
 }
-.select-items {
-  background-color: DodgerBlue;
+
+select:focus { 
+  outline: none;
+  background-size: 33px;
+  background-repeat: no-repeat;
+  background-position: calc(100% - 0.25rem);
+  appearance: none;
+}
+
+select:focus { 
+  outline: none;
+  background-size: 33px;
+  background-repeat: no-repeat;
+  background-position: calc(100% - 0.25rem);
+  appearance: none;
+}
+
+select:focus { 
+    outline: none;
 }
 
 .heavy-rain {

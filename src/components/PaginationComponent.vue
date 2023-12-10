@@ -1,65 +1,109 @@
 <script setup>
-import { ref } from 'vue'
-const emits = defineEmits(['selectedSize', 'selectedPage'])
-defineProps({
-  totalPage: { type: Number, default: 1 },
-
+import { ref, computed } from "vue"
+const emits = defineEmits(["selectedSize", "selectedPage"])
+const props = defineProps({
+  totalPage: { type: Number, default: 1 }
 })
 
 const shownTotal = [3, 5, 7]
 const selectedSize = ref(5)
 const selectedPage = ref(1)
+const getTotalPage = computed(() => {
+  const pages = ref([])
+  let onsides = 1
+  for (let i = 1; i <= props.totalPage; i++) {
 
-function selectPage (page) {
-    selectedPage.value = page
-    emits('selectedPage', selectedPage.value)
-}
+    if (
+      i == 1 ||
+      (selectedPage.value - onsides <= i && selectedPage.value + onsides >= i) ||
+      i == selectedPage.value ||
+      i == props.totalPage
+    ) {
+      pages.value.push(i)
+    } else if (
+      i == selectedPage.value + (onsides + 1)
+    ) {
+      pages.value.push("...")
+    }
+  }
+  console.log(pages.value)
+  return pages.value
+})
 
-function backward () {
-    selectedPage.value -= 1
-    emits('selectedPage', selectedPage.value)
-}
-
-function forward () {
+function navigate(page) {
+  if (page == "forward" && selectedPage.value < props.totalPage) {
     selectedPage.value += 1
-    emits('selectedPage', selectedPage.value)
+  } else if (page == "backward" && selectedPage.value > 1) {
+    selectedPage.value -= 1
+  } else if (typeof page == "number") {
+    selectedPage.value = page
+  }
+  emits("selectedPage", selectedPage.value)
 }
 </script>
 
 <template>
   <div class="pages">
-    <div @click="backward()" class="page" :class="totalPage == 1 || selectedPage == 1 ? 'disabled' : ''">
-        &lt;
-    </div>
     <div
-      v-for="page in totalPage"
-      :key="page"
-      :class="Math.round(page) == Math.round(selectedPage) ? 'selected' : ''"
+      :class="totalPage == 1 || selectedPage == 1 ? 'disabled' : ''"
       class="page"
-      @click="selectPage(page)"
+      @click="navigate('backward')"
     >
-      {{ page }}
+      &lt;
     </div>
-    <div @click="forward()" class="page" :class="totalPage == 1 || selectedPage == totalPage ? 'disabled' : ''">
-        &gt;
+
+    <div
+      v-if="totalPage <= 5"
+      class="flex"
+    >
+      <div
+        v-for="page in getTotalPage"
+        :key="page"
+        :class="Math.round(page) == Math.round(selectedPage) ? 'selected' : ''"
+        class="page"
+        @click="navigate(page)"
+      >
+        {{ page }}
+      </div>
+    </div>
+
+    <div
+      v-if="totalPage > 5"
+      class="flex"
+    >
+      <div
+        v-for="page in getTotalPage"
+        :key="page"
+        :class="Math.round(page) == Math.round(selectedPage) ? 'selected' : ''"
+        class="page"
+        @click="navigate(page)"
+      >
+        {{ page }}
+      </div>
+    </div>
+
+    <div
+      class="page"
+      :class="totalPage == 1 || selectedPage == totalPage ? 'disabled' : ''"
+      @click="navigate('forward')"
+    >
+      &gt;
     </div>
     <div class="pageSize">
-        <span class="opacity-50">SHOW</span>
-        <select
-            v-model="selectedSize"
-            class="pl-9 pr-11 py-5"
-            @change="$emit('selectedSize', selectedSize)"
-          >
-          
-            <option
-            v-for="(option, index) in shownTotal"
-            :key="index"
-            :value="option"
-            >
-             {{ option }}
-            </option>
-            
-          </select>
+      <span class="opacity-50">SHOW</span>
+      <select
+        v-model="selectedSize"
+        class="pl-7 pr-9 py-4"
+        @change="$emit('selectedSize', selectedSize)"
+      >
+        <option
+          v-for="(option, index) in shownTotal"
+          :key="index"
+          :value="option"
+        >
+          {{ option }}
+        </option>
+      </select>
     </div>
   </div>
 </template>
@@ -72,10 +116,11 @@ function forward () {
 
 .page {
   background-color: #353535;
-  padding: 1em 1.5em;
-  margin: 0 1.25rem;
+  padding: 0.75em 1.25em;
+  margin: 0 1em;
   border-radius: 10px;
   cursor: pointer;
+  user-select: none;
 }
 
 .page:hover {
@@ -83,15 +128,16 @@ function forward () {
 }
 
 .selected {
-    background-color: #000000;
+  background-color: #000000;
 }
 
 .pageSize {
-    background-color: #353535;
-    padding: 0em 2em;
-    border-radius: 10px;
-    cursor: pointer;
-    margin-left: auto;
+  background-color: #353535;
+  padding: 0em 2em;
+  /* margin: 0em 1em; */
+  border-radius: 10px;
+  cursor: pointer;
+  margin-left: auto;
 }
 
 select {
@@ -105,17 +151,16 @@ select {
   cursor: pointer;
 }
 
-select:focus { 
-    outline: none;
+select:focus {
+  outline: none;
 }
 
 .disabled {
-    opacity: 50%;
-    cursor: not-allowed;
+  opacity: 50%;
+  cursor: not-allowed;
 }
 
 .disabled:hover {
-    background-color: #353535;
+  background-color: #353535;
 }
-
 </style>
