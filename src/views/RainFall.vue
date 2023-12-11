@@ -20,7 +20,7 @@ const reports = ref([])
 const getReports = async (reportTime, sorted, selectedStatus) => {
   const time = await getTimes()
   const modifiedTime = reportTime
-    ? moment(reportTime).toISOString(true).slice(0, -13) + "Z"
+    ? moment(reportTime).toISOString().slice(0, -8) + "Z"
     : moment(time[0].reportTime).toISOString().slice(0, -8) + "Z"
   reports.value = []
   axios
@@ -46,7 +46,7 @@ const getTimes = () => {
       options.value = []
       for (let i in res.data) {
         options.value.push(
-          moment.utc(res.data[i].reportTime).format("DD MMMM YYYY HH:mm")
+          moment.utc(res.data[i].reportTime).local().format("DD MMMM YYYY HH:mm")
         )
       }
       return res.data

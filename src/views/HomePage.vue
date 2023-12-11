@@ -8,11 +8,11 @@ onBeforeMount(() => {
 })
 
 const random = ref([])
-const url = import.meta.env.PROD ?  import.meta.env.VITE_API_URL : '/api'
+const url = import.meta.env.PROD ? import.meta.env.VITE_API_URL : "/api"
 const iconPath = "src/assets/rain-status/"
-function getRandom() {
+async function getRandom() {
   for (random.value; random.value.length <= 3; ) {
-    const randomNum = Math.floor(Math.random() * (49 - 0 + 1) + 1)
+    const randomNum = Math.floor(Math.random() * (49 - 0 + 1) )
     if (!random.value.includes(randomNum)) {
       random.value.push(randomNum)
     }
@@ -21,35 +21,32 @@ function getRandom() {
 }
 
 const getReports = async (reportTime) => {
+  favorites.value = []
   const randoms = await getRandom()
   const time = await getTimes()
   const modifiedTime = reportTime
     ? moment(reportTime).toISOString(true).slice(0, -13) + "Z"
     : moment(time[0].reportTime).toISOString().slice(0, -8) + "Z"
-  axios
-    .get(`${url}/report?specificTime=${modifiedTime}`)
-    .then((res) => {
-      for (let i = 0; i < 4; i++) {
-        favorites.value.push({
-          district: res.data[randoms[i]].reportDistrict.districtName,
-          status:
-            res.data[randoms[i]].rainStatus.charAt(0) +
-            res.data[randoms[i]].rainStatus.slice(1).toLowerCase(),
-          icon:
-            iconPath +
-            res.data[randoms[i]].rainStatus.replace(/\s+/g, "-").toLowerCase() +
-            ".svg"
-        })
-      }
-    })
+  axios.get(`${url}/report?specificTime=${modifiedTime}`).then((res) => {
+    for (let i = 0; i < 4; i++) {
+      favorites.value.push({
+        district: res.data[randoms[i]].reportDistrict.districtName,
+        status:
+          res.data[randoms[i]].rainStatus.charAt(0) +
+          res.data[randoms[i]].rainStatus.slice(1).toLowerCase(),
+        icon:
+          iconPath +
+          res.data[randoms[i]].rainStatus.replace(/\s+/g, "-").toLowerCase() +
+          ".svg"
+      })
+    }
+  })
 }
 
 const getTimes = () => {
-  const Times = axios
-    .get(`${url}/report/time`)
-    .then((res) => {
-      return res.data
-    })
+  const Times = axios.get(`${url}/report/time`).then((res) => {
+    return res.data
+  })
   return Times
 }
 const infoBoxs = [
