@@ -4,6 +4,7 @@ import TableComponent from "../components/TableComponent.vue"
 import { ref, onBeforeMount } from "vue"
 import moment from "moment"
 
+const url = import.meta.env.PROD ?  import.meta.env.VITE_API_URL : '/api'
 const headers = ["DISTRICT", "Status"]
 const options = ref()
 const sort = ref()
@@ -24,7 +25,7 @@ const getReports = async (reportTime, sorted, selectedStatus) => {
   reports.value = []
   axios
     .get(
-      `http://localhost:3000/api/report?specificTime=${modifiedTime}${
+      `${url}/report?specificTime=${modifiedTime}${
         selectedStatus != undefined ? "&rainStatus=" + selectedStatus : ""
       }${sorted ? "&sort=distinctname," + sorted : ""}`
     )
@@ -40,7 +41,7 @@ const getReports = async (reportTime, sorted, selectedStatus) => {
 
 const getTimes = () => {
   const Times = axios
-    .get("http://localhost:3000/api/report/time")
+    .get(`${url}/report/time`)
     .then((res) => {
       options.value = []
       for (let i in res.data) {

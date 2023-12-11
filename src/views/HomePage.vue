@@ -8,6 +8,7 @@ onBeforeMount(() => {
 })
 
 const random = ref([])
+const url = import.meta.env.PROD ?  import.meta.env.VITE_API_URL : '/api'
 const iconPath = "src/assets/rain-status/"
 function getRandom() {
   for (random.value; random.value.length <= 3; ) {
@@ -26,7 +27,7 @@ const getReports = async (reportTime) => {
     ? moment(reportTime).toISOString(true).slice(0, -13) + "Z"
     : moment(time[0].reportTime).toISOString().slice(0, -8) + "Z"
   axios
-    .get("http://localhost:3000/api/report?specificTime=" + modifiedTime)
+    .get(`${url}/report?specificTime=${modifiedTime}`)
     .then((res) => {
       for (let i = 0; i < 4; i++) {
         favorites.value.push({
@@ -45,7 +46,7 @@ const getReports = async (reportTime) => {
 
 const getTimes = () => {
   const Times = axios
-    .get("http://localhost:3000/api/report/time")
+    .get(`${url}/report/time`)
     .then((res) => {
       return res.data
     })
