@@ -65,7 +65,7 @@ const favorites = ref([])
     </div>
     <div class="content">
       <h3>Daily Weather Forecast</h3>
-      <InformationBox :info-boxs="infoBoxs" />
+      <!-- <InformationBox :info-boxs="infoBoxs" /> -->
       <InformationBox
         v-if="favorites.length != 0"
         :info-boxs="favorites"
