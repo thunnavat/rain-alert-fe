@@ -1,34 +1,61 @@
 <script setup>
 import InformationBox from "../components/InformationBox.vue"
+import { ref, onBeforeMount } from "vue"
+import axios from "axios"
+import moment from "moment"
+onBeforeMount(() => {
+  getReports()
+})
+
+const random = ref([])
+const url = import.meta.env.PROD ? import.meta.env.VITE_API_URL : "/api"
+const iconPath = "src/assets/rain-status/"
+async function getRandom() {
+  for (random.value; random.value.length <= 3; ) {
+    const randomNum = Math.floor(Math.random() * (49 - 0 + 1) )
+    if (!random.value.includes(randomNum)) {
+      random.value.push(randomNum)
+    }
+  }
+  return random.value
+}
+
+const getReports = async (reportTime) => {
+  favorites.value = []
+  const randoms = await getRandom()
+  const time = await getTimes()
+  const modifiedTime = reportTime
+    ? moment(reportTime).toISOString(true).slice(0, -13) + "Z"
+    : moment(time[0].reportTime).toISOString().slice(0, -8) + "Z"
+  axios.get(`${url}/report?specificTime=${modifiedTime}`).then((res) => {
+    for (let i = 0; i < 4; i++) {
+      favorites.value.push({
+        district: res.data[randoms[i]].reportDistrict.districtName,
+        status:
+          res.data[randoms[i]].rainStatus.charAt(0) +
+          res.data[randoms[i]].rainStatus.slice(1).toLowerCase(),
+        icon:
+          iconPath +
+          res.data[randoms[i]].rainStatus.replace(/\s+/g, "-").toLowerCase() +
+          ".svg"
+      })
+    }
+  })
+}
+
+const getTimes = () => {
+  const Times = axios.get(`${url}/report/time`).then((res) => {
+    return res.data
+  })
+  return Times
+}
 const infoBoxs = [
   {
     value:
       "Bangkok and Perimeters | Isolated thundershowers. Minimum temperature 25-26 °C. Maximum temperature 33-36 °C. Easterly winds 10-25 km/hr."
   }
 ]
-const iconPath = "src/assets/rain-status/"
-const favorites = [
-  {
-    district: "Bangkok noi",
-    status: "Heavy rain",
-    icon: iconPath + "heavy-rain.svg"
-  },
-  {
-    district: "Phasi Charon",
-    status: "Moderate rain",
-    icon: iconPath + "moderate-rain.svg"
-  },
-  {
-    district: "Thung kru",
-    status: "Light rain",
-    icon: iconPath + "light-rain.svg"
-  },
-  {
-    district: "Wang thong lang",
-    status: "No rain",
-    icon: iconPath + "no-rain.svg"
-  }
-]
+const favorites = ref([])
 </script>
 
 <template>
@@ -38,8 +65,11 @@ const favorites = [
     </div>
     <div class="content">
       <h3>Daily Weather Forecast</h3>
-      <InformationBox :info-boxs="infoBoxs" />
-      <InformationBox :info-boxs="favorites" />
+      <!-- <InformationBox :info-boxs="infoBoxs" /> -->
+      <InformationBox
+        v-if="favorites.length != 0"
+        :info-boxs="favorites"
+      />
     </div>
   </div>
 </template>

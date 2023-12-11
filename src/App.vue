@@ -38,11 +38,11 @@ function navigateToHome() {
         :nav-selected="navSelected"
         @click="navSelected = ''"
       />
-      <BtnComponent
+      <!-- <BtnComponent
         class="loginBtn"
         :btn-property="btnProp"
         @click="login()"
-      />
+      /> -->
     </span>
   </div>
   <router-view></router-view>
