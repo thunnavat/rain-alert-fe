@@ -1,7 +1,12 @@
 <script setup>
-defineProps({
+const props = defineProps({
   infoBoxs: { type: Array, default: () => [] }
 })
+
+function imageUrl(array){
+  return new URL(`${props.infoBoxs[array].icon}`, import.meta.url).href
+} 
+
 </script>
 
 <template>
@@ -24,7 +29,7 @@ defineProps({
         <h3>{{ infoBox.district }}</h3>
         <div class="subHeader">{{ infoBox.status }}</div>
         <img
-          :src="infoBox.icon"
+          :src="imageUrl(index)"
           alt=""
         />
       </div>
