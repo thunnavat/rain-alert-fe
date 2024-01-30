@@ -9,7 +9,7 @@ onBeforeMount(() => {
 
 const random = ref([])
 const url = import.meta.env.PROD ? import.meta.env.VITE_API_URL : "/api"
-const iconPath = "src/assets/rain-status/"
+const iconPath = "../assets/rain-status/"
 async function getRandom() {
   for (random.value; random.value.length <= 3; ) {
     const randomNum = Math.floor(Math.random() * (49 - 0 + 1) )
