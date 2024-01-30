@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router"
-import HomePage from "../views/Homepage.vue"
+import HomePage from "../views/HomePage.vue"
 import RainFall from "../views/RainFall.vue"
 import SubScribe from "../views/SubScribe.vue"
 import Report from "../views/ReportPage.vue"
