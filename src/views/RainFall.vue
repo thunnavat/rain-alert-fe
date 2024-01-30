@@ -60,7 +60,12 @@ function selectedValue(selected) {
 }
 
 function sortBy(sorted) {
-  sort.value = sorted
+  if(sorted == "asc" || sorted == "desc"){
+    sort.value = sorted
+  }
+  else if(sorted == "classic"){
+    sort.value = "asc"
+  }
   doGetReport()
 }
 
