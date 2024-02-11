@@ -8,14 +8,18 @@ let btnProp = {
   btnName: "Login",
   iconPath: "src/assets/LoginIcon.svg",
   iconAlt: "LoginIcon",
-  class: "login"
+  class: "login",
+  bgColor: "#3b95d6"
 }
 
 let navNames = ["Home", "Rain Fall", "Subscribe", "Report Bug"]
 
 let navSelected = ref("")
 
-function login() {}
+function login() {
+  router.push({ name : "Login" })
+  navSelected.value = "Login"
+}
 
 function navigateToHome() {
   router.push({ name: "Home" })
@@ -38,11 +42,12 @@ function navigateToHome() {
         :nav-selected="navSelected"
         @click="navSelected = ''"
       />
-      <!-- <BtnComponent
+      <BtnComponent
         class="loginBtn"
         :btn-property="btnProp"
         @click="login()"
-      /> -->
+      />
+      
     </span>
   </div>
   <router-view></router-view>

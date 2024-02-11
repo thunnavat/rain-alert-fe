@@ -6,13 +6,13 @@ defineProps({
 
 <template>
   <div>
-    <button :class="btnProperty.class">
+    <button class="default" :class="btnProperty.class" :style="{backgroundColor: btnProperty.bgColor, width: btnProperty.width, height: btnProperty.height, justifyContent: btnProperty.iconPath ? '' : 'space-evenly'}">
       <span v-if="btnProperty.iconPath != ''">
         <img
           :src="btnProperty.iconPath"
           :alt="btnProperty.iconAlt"
-          width="30"
-          height="30"
+          :width="btnProperty.iconWidth ? btnProperty.iconWidth : 30"
+          :height="btnProperty.iconHeight ? btnProperty.iconHeight : 30"
           style="padding-right: 7px"
         />
       </span>
@@ -22,14 +22,19 @@ defineProps({
 </template>
 
 <style scoped>
-.login {
-  background-color: #3b95d6;
+
+.default {
   display: flex;
   align-items: center;
 }
 
+
 .login:hover {
   animation: move 0.15s 2 alternate;
+}
+
+.Login:focus {
+  outline: none;
 }
 
 @keyframes move {
