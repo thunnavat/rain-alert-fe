@@ -152,7 +152,7 @@ function selectedStatus(selectStatus) {
 <style scoped>
 .table {
   padding: 2em 5em;
-  margin: 0em 15em;
+  margin: auto;
   background-color: #171717;
   border-radius: 10px;
   width: 60%;
