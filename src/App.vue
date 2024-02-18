@@ -4,9 +4,10 @@ import NavComponent from "./components/NavComponent.vue"
 import { ref } from "vue"
 import router from "./router"
 
+const page = localStorage.getItem('page')
 let btnProp = {
   btnName: "Login",
-  iconPath: "src/assets/LoginIcon.svg",
+  iconPath: import.meta.env.PROD ?  import.meta.env.VITE_IMAGE_PATH + 'LoginIcon.svg' : '/LoginIcon.svg',
   iconAlt: "LoginIcon",
   class: "login",
   bgColor: "#3b95d6"
@@ -14,7 +15,7 @@ let btnProp = {
 
 let navNames = ["Home", "Rain Fall", "Subscribe", "Report Bug"]
 
-let navSelected = ref("")
+let navSelected = ref(page)
 
 function login() {
   router.push({ name : "Login" })

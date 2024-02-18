@@ -1,7 +1,11 @@
 <script setup>
-defineProps({
+const props = defineProps({
   btnProperty: { type: Object, default: () => {} }
 })
+
+function imageUrl(){
+  return new URL(`${props.btnProperty.iconPath}`, import.meta.url).href
+} 
 </script>
 
 <template>
@@ -9,7 +13,7 @@ defineProps({
     <button class="default" :class="btnProperty.class" :style="{backgroundColor: btnProperty.bgColor, width: btnProperty.width, height: btnProperty.height, justifyContent: btnProperty.iconPath ? '' : 'space-evenly'}">
       <span v-if="btnProperty.iconPath != ''">
         <img
-          :src="btnProperty.iconPath"
+          :src="imageUrl()"
           :alt="btnProperty.iconAlt"
           :width="btnProperty.iconWidth ? btnProperty.iconWidth : 30"
           :height="btnProperty.iconHeight ? btnProperty.iconHeight : 30"
