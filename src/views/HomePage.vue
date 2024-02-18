@@ -7,6 +7,7 @@ onBeforeMount(() => {
   getReports()
 })
 
+localStorage.setItem('page', 'Home')
 const random = ref([])
 const url = import.meta.env.PROD ? import.meta.env.VITE_API_URL : "/api"
 const iconPath = "../rain-status/"
@@ -64,7 +65,7 @@ const favorites = ref([])
       <h1 class="header-text">RAINALERT</h1>
     </div>
     <div class="content">
-      <h3>Daily Weather Forecast</h3>
+      <!-- <h3>Daily Weather Forecast</h3> -->
       <!-- <InformationBox :info-boxs="infoBoxs" /> -->
       <InformationBox
         v-if="favorites.length != 0"

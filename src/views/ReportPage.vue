@@ -1,4 +1,6 @@
-<script setup></script>
+<script setup>
+localStorage.setItem('page', 'Report Bug')
+</script>
 
 <template>
   <div>

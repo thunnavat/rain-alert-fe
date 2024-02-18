@@ -4,6 +4,8 @@ import TableComponent from "../components/TableComponent.vue"
 import { ref, onBeforeMount } from "vue"
 import moment from "moment"
 
+localStorage.setItem('page', 'Rain Fall')
+
 const url = import.meta.env.PROD ?  import.meta.env.VITE_API_URL : '/api'
 const headers = ["DISTRICT", "Status"]
 const options = ref()
