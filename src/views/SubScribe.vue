@@ -1,25 +1,34 @@
 <script setup>
-import { ref } from "vue"
+import { ref, onMounted } from "vue"
 import BtnComponent from "../components/BtnComponent.vue"
 import { userSubscribe } from "../store/userData.js"
+import { UserDataApi } from "../util/utils"
+import router from "../router"
 
-localStorage.setItem('page', 'Subscribe')
+localStorage.setItem("page", "Subscribe")
 const selectedDistrict = ref("")
-const x = ref("")
-const y = ref("")
+
 const isZoom = ref(false)
 const storeProvince = userSubscribe()
-console.log(storeProvince.provinces)
+const isLoggedIn = !(UserDataApi.getDistrict() == "Not Logged In Yet")
+
+onMounted(() => {
+  UserDataApi.getDistrict()
+})
+
+// UserDataApi.getDistrict()
+function navigateToLogin() {
+  router.push({name: "Login"})
+}
 
 function setProvinces(name) {
-  if(storeProvince.provinces.includes(name)){
+  if (storeProvince.provinces.includes(name)) {
     storeProvince.removeProvince(name)
-  }
-  else if(storeProvince.provinces.includes(name) == false) {
+  } else if (storeProvince.provinces.includes(name) == false) {
     storeProvince.setProvince(name)
+    UserDataApi.addDistrict(name)
+    console.log(storeProvince.provinces)
   }
-  console.log(storeProvince.provinces)
-
 }
 
 const districts = [
@@ -268,10 +277,6 @@ const districts = [
       "689,944,671,974,667,1011,641,1022,608,1022,582,996,571,963,571,929,622,929,637,911,674,914,678,918"
   }
 ]
-function showCoords(event) {
-  x.value = event.offsetX
-  y.value = event.offsetY
-}
 
 const zoomBtn = {
   btnName: "Zoom Image",
@@ -283,7 +288,7 @@ const zoomBtn = {
 
 <template>
   <div
-    @mousemove="showCoords($event)"
+    v-if="isLoggedIn == true"
     class="bg-[#171717]"
   >
     <BtnComponent
@@ -293,12 +298,22 @@ const zoomBtn = {
     <p class="sticky top-0 text-2xl bg-[#171717]">
       Your Selected District Is {{ selectedDistrict ? selectedDistrict : "-" }}
     </p>
-    <div v-show="storeProvince.provinces != ''" class="absolute top-1/2 h-96 overflow-y-auto px-10">
-      <p>
-      Your Current Subsciption List Is
-      </p>
-      <ul class="" v-for="(province, index) in storeProvince.provinces" :key="index">
-        <li @click="setProvinces(province)" class="hover:cursor-pointer select-none">{{ province }}</li>
+    <div
+      v-show="storeProvince.provinces != ''"
+      class="absolute top-1/2 h-96 overflow-y-auto px-10"
+    >
+      <p>Your Current Subsciption List Is</p>
+      <ul
+        v-for="(province, index) in storeProvince.provinces"
+        :key="index"
+        class=""
+      >
+        <li
+          class="hover:cursor-pointer select-none"
+          @click="setProvinces(province)"
+        >
+          {{ province }}
+        </li>
       </ul>
     </div>
     <svg
@@ -315,29 +330,40 @@ const zoomBtn = {
         xlink:href="../assets/BkMap.png"
       />
       <polygon
-      v-for="(district, index) in districts"
-      :key="index"
-      :points="district.coords"
-      fill="transparent"
-      stroke-miterlimit="10"
-      :class="storeProvince.provinces.includes(district.name) ? 'favorited' : 'poly'"
-      @click="setProvinces(district.name)"
+        v-for="(district, index) in districts"
+        :key="index"
+        :points="district.coords"
+        fill="transparent"
+        stroke-miterlimit="10"
+        :class="
+          storeProvince.provinces.includes(district.name) ? 'favorited' : 'poly'
+        "
+        @click="setProvinces(district.name)"
         @mouseenter="selectedDistrict = district.name"
         @mouseleave="selectedDistrict = ''"
       />
     </svg>
   </div>
+  <div
+    v-else-if="isLoggedIn == false"
+    class="bg-[#171717] h-96 flex items-center justify-center"
+  >
+    <h1>Please 
+      <span 
+      class="text-blue-600 hover:cursor-pointer hover:underline"
+      @click="navigateToLogin()">Log In</span>
+       First</h1>
+  </div>
 </template>
 
 <style scoped>
 .poly {
-  transition: all .5s;
+  transition: all 0.5s;
 }
 .poly:hover {
   stroke: hsla(65, 100%, 50%, 0.553);
   stroke-width: 2px;
   fill: hsla(65, 100%, 50%, 0.553);
-  
 }
 .zoom {
   transition-property: all;
@@ -366,7 +392,4 @@ const zoomBtn = {
     stroke-width: 3px;
   }
 }
-
-
-
 </style>
