@@ -1,12 +1,20 @@
 <script setup>
 import InformationBox from "../components/InformationBox.vue"
-import { ref, onBeforeMount } from "vue"
+import { ref, onBeforeMount, onMounted } from "vue"
 import axios from "axios"
 import moment from "moment"
+import { userData } from "../store/userData"
 onBeforeMount(() => {
   getReports()
 })
 
+
+const storeProvince = userData()
+
+onMounted(() => {
+  console.log(storeProvince.getLoginStatus)
+  console.log(localStorage.getItem('access_token'))
+})
 localStorage.setItem('page', 'Home')
 const random = ref([])
 const url = import.meta.env.PROD ? import.meta.env.VITE_API_URL : "/api"

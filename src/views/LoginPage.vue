@@ -1,17 +1,19 @@
 <script setup>
 import BtnComponent from "../components/BtnComponent.vue"
 import { ref, onMounted } from "vue"
-import uploadImg from "vue-image-crop-upload"
+// import uploadImg from "vue-image-crop-upload"
 import { useRoute } from "vue-router"
 import axios from "axios"
 import router from "../router"
 
 localStorage.setItem("page", "Login")
 const Mode = ref("login")
-const userName = ref("")
+const email = ref("")
 const passWord = ref("")
-const isUpload = ref(false)
-let imgData = ref("")
+// const isUpload = ref(false)
+const displayName = ref("")
+const errorMsg = ref("")
+// let imgData = ref("")
 
 let btnProp = {
   btnName: "Login",
@@ -48,16 +50,6 @@ let lineBtn = {
   bgColor: "#06C755",
   width: "24rem",
   height: "3.5rem"
-}
-
-function login(user, pass) {
-  alert(user)
-  alert(pass)
-}
-
-function CropSuccess(cropData) {
-  console.log("upload success")
-  imgData.value = cropData
 }
 
 const lineLoginUrl =
@@ -124,6 +116,7 @@ const getInitialProps = async () => {
             })
             .then((res) => {
               localStorage.setItem("access_token", res.data.accessToken)
+              localStorage.setItem("page", "Home")
               router.push({ name: "Home" })
             })
         })
@@ -136,6 +129,48 @@ const getInitialProps = async () => {
 onMounted(() => {
   getInitialProps()
 })
+
+function login(user, pass) {
+  axios
+    .post(`${url}/login`, {
+      email: user,
+      password: pass,
+      registerType: "WEB"
+    }).catch(function(error) {
+      errorMsg.value = error.response.data.message
+    })
+    .then((res) => {
+      console.log(res)
+      localStorage.setItem("access_token", res.data.accessToken)
+      router.push({ name: "Home" })
+    })
+}
+
+function signUp() {
+  axios
+    .post(`${url}/users/register`, {
+      email: email.value,
+      password: passWord.value,
+      displayName: displayName.value,
+      registerType: "WEB",
+    })
+    .then(() => {
+      axios
+        .post(`${url}/login`, {
+          email: email.value,
+          password: passWord.value,
+          registerType: "WEB"
+        })
+        .then((res) => {
+          localStorage.setItem("access_token", res.data.accessToken)
+          router.push({ name: "Home" })
+        })
+    })
+}
+
+// function CropSuccess(cropData) {
+//   imgData.value = cropData
+// }
 </script>
 
 <template>
@@ -150,6 +185,7 @@ onMounted(() => {
         class="max-w-full"
       />
     </div>
+
     <div
       class="info"
       :class="Mode == 'login' ? '' : 'altFont w-4/6'"
@@ -159,6 +195,14 @@ onMounted(() => {
           <BtnComponent :btn-property="lineBtn" />
         </a>
       </div>
+      <div
+        v-show="errorMsg != ''"
+        class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 my-3 rounded relative"
+        role="alert"
+      >
+        <span class="block sm:inline">{{ errorMsg }}</span>
+      </div>
+
       <div class="formText pt-6">
         Email / Username <br />
         <input
@@ -166,6 +210,7 @@ onMounted(() => {
           type="text"
           required
           class="textInput"
+          @click="errorMsg = ''"
         />
       </div>
       <div class="formText pt-10">
@@ -175,6 +220,7 @@ onMounted(() => {
           type="password"
           required
           class="textInput"
+          @click="errorMsg = ''"
         />
       </div>
       <div class="pt-10 flex">
@@ -209,17 +255,10 @@ onMounted(() => {
       />
     </div>
     <div class="info altFont w-4/6">
-      <div class="formText">
-        Username <br />
-        <input
-          type="text"
-          required
-          class="textInput"
-        />
-      </div>
       <div class="formText pt-4">
         Email <br />
         <input
+          v-model="email"
           type="text"
           required
           class="textInput"
@@ -228,6 +267,7 @@ onMounted(() => {
       <div class="formText pt-4">
         Password <br />
         <input
+          v-model="passWord"
           type="password"
           required
           class="textInput"
@@ -244,14 +284,14 @@ onMounted(() => {
       <div class="formText pt-4">
         DisplayName <br />
         <input
+          v-model="displayName"
           type="text"
           required
           class="textInput"
         />
       </div>
-      <div class="formText pt-6 pb-6">
+      <!-- <div class="formText pt-6 pb-6">
         Choose Your Profile Picture<br />
-        <!-- <input type="file" @change="upload"> -->
         <button @click="isUpload = true">upload image</button>
         <div class="pt-3">
           <img
@@ -269,11 +309,12 @@ onMounted(() => {
             @crop-success="CropSuccess"
           ></uploadImg>
         </div>
-      </div>
+      </div> -->
       <div class="py-8 flex">
         <BtnComponent
           :btn-property="signUpBtn"
           class="btn"
+          @click="signUp()"
         />
         <span
           class="btn altFont pl-7 pt-2"

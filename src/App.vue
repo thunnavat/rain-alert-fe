@@ -3,6 +3,9 @@ import BtnComponent from "./components/BtnComponent.vue"
 import NavComponent from "./components/NavComponent.vue"
 import { ref } from "vue"
 import router from "./router"
+import { userData } from "./store/userData"
+
+const storeProvince = userData()
 
 const page = localStorage.getItem('page')
 let btnProp = {
@@ -11,6 +14,12 @@ let btnProp = {
   iconAlt: "LoginIcon",
   class: "login",
   bgColor: "#3b95d6"
+}
+
+let ProfileIcon = {
+  btnName: storeProvince.getUserData.displayName,
+  iconPath: '',
+  bgColor: 'black'
 }
 
 let navNames = ["Home", "Rain Fall", "Subscribe", "Report Bug"]
@@ -25,6 +34,10 @@ function login() {
 function navigateToHome() {
   router.push({ name: "Home" })
   navSelected.value = "Home"
+}
+
+function navigateToProfile() {
+  console.log(storeProvince.getUserData)
 }
 </script>
 
@@ -43,11 +56,22 @@ function navigateToHome() {
         :nav-selected="navSelected"
         @click="navSelected = ''"
       />
-      <BtnComponent
-        class="loginBtn"
+    
+        <BtnComponent
+        v-if="storeProvince.getUserData == 'Token not found'"
+        class="loginBtn bg-[#171717]"
         :btn-property="btnProp"
         @click="login()"
-      />
+        />
+  
+        <BtnComponent
+        v-else-if="storeProvince.getUserData != 'Token not found'"
+        class="loginBtn"
+        :btn-property="ProfileIcon"
+        @click="navigateToProfile()"
+        />
+
+      
       
     </span>
   </div>
@@ -98,7 +122,6 @@ function navigateToHome() {
   margin-top: 0.4em;
   padding: 8px;
   border-radius: 10px;
-  background-color: #171717;
 }
 
 .footer {
