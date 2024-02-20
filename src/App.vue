@@ -37,7 +37,8 @@ function navigateToHome() {
 }
 
 function navigateToProfile() {
-  console.log(storeProvince.getUserData)
+  localStorage.removeItem("access_token")
+  window.location.reload()
 }
 </script>
 

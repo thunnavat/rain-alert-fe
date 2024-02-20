@@ -27,7 +27,7 @@ const getReports = async (reportTime, sorted, selectedStatus) => {
   reports.value = []
   axios
     .get(
-      `${url}/report?specificTime=${modifiedTime}${
+      `${url}/reports?specificTime=${modifiedTime}${
         selectedStatus != undefined ? "&rainStatus=" + selectedStatus : ""
       }${sorted ? "&sort=distinctname," + sorted : ""}`
     )
@@ -43,7 +43,7 @@ const getReports = async (reportTime, sorted, selectedStatus) => {
 
 const getTimes = () => {
   const Times = axios
-    .get(`${url}/report/time`)
+    .get(`${url}/reports/time`)
     .then((res) => {
       options.value = []
       for (let i in res.data) {

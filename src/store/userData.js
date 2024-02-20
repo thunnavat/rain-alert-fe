@@ -65,6 +65,9 @@
             }
         },
         actions: {
+            setInitProvince(province){
+                this.provinces = province
+            },
             setProvince(province) {
                 this.provinces.push(province)
                 

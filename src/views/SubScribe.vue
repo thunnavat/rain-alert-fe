@@ -24,10 +24,10 @@ function navigateToLogin() {
 function setProvinces(name) {
   if (storeProvince.provinces.includes(name)) {
     storeProvince.removeProvince(name)
+    UserDataApi.setDistrict()
   } else if (storeProvince.provinces.includes(name) == false) {
     storeProvince.setProvince(name)
-    UserDataApi.addDistrict(name)
-    console.log(storeProvince.provinces)
+    UserDataApi.setDistrict()
   }
 }
 
