@@ -41,6 +41,8 @@
                 if(token != null){
                     this.count++
                     return this.count
+                }else if(token == null){
+                    return 'Not Logged In'
                 }
             }
         },

@@ -15,13 +15,11 @@ onMounted(() => {
   if(localStorage.getItem('access_token') != null && storeProvince.getLoginStatus != 1){
     window.location.reload()
   }
-  console.log(storeProvince.getLoginStatus)
-  console.log(localStorage.getItem('access_token'))
 })
 localStorage.setItem('page', 'Home')
 const random = ref([])
 const url = import.meta.env.PROD ? import.meta.env.VITE_API_URL : "/api"
-const iconPath = "../rain-status/"
+const iconPath = import.meta.env.PROD ? import.meta.env.VITE_IMAGE_PATH + "rain-status/" : "/rain-status/";
 async function getRandom() {
   for (random.value; random.value.length <= 3; ) {
     const randomNum = Math.floor(Math.random() * (49 - 0 + 1) )

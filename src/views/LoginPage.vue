@@ -96,7 +96,6 @@ const getInitialProps = async () => {
         lineToken: tokenData,
         profile: requestVerify.data
       }
-      console.log(userInfo.value)
     }
     if (userInfo.value) {
       await axios
@@ -140,7 +139,6 @@ function login(user, pass) {
       errorMsg.value = error.response.data.message
     })
     .then((res) => {
-      console.log(res)
       localStorage.setItem("access_token", res.data.accessToken)
       router.push({ name: "Home" })
     })
