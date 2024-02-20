@@ -4,8 +4,14 @@ import NavComponent from "./components/NavComponent.vue"
 import { ref } from "vue"
 import router from "./router"
 import { userData } from "./store/userData"
+import { onMounted } from "vue"
 
 const storeProvince = userData()
+
+onMounted(() => {
+  storeProvince.getLoginStatus
+})
+
 
 const page = localStorage.getItem('page')
 let btnProp = {
