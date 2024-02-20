@@ -12,6 +12,9 @@ onBeforeMount(() => {
 const storeProvince = userData()
 
 onMounted(() => {
+  if(localStorage.getItem('access_token') != null && storeProvince.getLoginStatus != 1){
+    window.location.reload()
+  }
   console.log(storeProvince.getLoginStatus)
   console.log(localStorage.getItem('access_token'))
 })
@@ -36,7 +39,7 @@ const getReports = async (reportTime) => {
   const modifiedTime = reportTime
     ? moment(reportTime).toISOString(true).slice(0, -13) + "Z"
     : moment(time[0].reportTime).toISOString().slice(0, -8) + "Z"
-  axios.get(`${url}/report?specificTime=${modifiedTime}`).then((res) => {
+  axios.get(`${url}/reports?specificTime=${modifiedTime}`).then((res) => {
     for (let i = 0; i < 4; i++) {
       favorites.value.push({
         district: res.data[randoms[i]].reportDistrict.districtName,
@@ -53,7 +56,7 @@ const getReports = async (reportTime) => {
 }
 
 const getTimes = () => {
-  const Times = axios.get(`${url}/report/time`).then((res) => {
+  const Times = axios.get(`${url}/reports/time`).then((res) => {
     return res.data
   })
   return Times
@@ -120,5 +123,6 @@ const favorites = ref([])
 .content {
   text-align: left;
   margin-left: 2em;
+  margin-top: 6em;
 }
 </style>

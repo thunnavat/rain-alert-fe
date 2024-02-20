@@ -53,7 +53,7 @@ let lineBtn = {
 }
 
 const lineLoginUrl =
-  "https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=2003424448&redirect_uri=http%3A%2F%2Flocalhost%3A5173%2Ftt3%2Flogin&state=cp23tt3mtj&scope=profile%20openid"
+"https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=2003424448&redirect_uri=http%3A%2F%2Fcapstone23.sit.kmutt.ac.th%2Ftt3%2Flogin&state=cp23tt3mtj&scope=profile%20openid"
 const url = import.meta.env.PROD ? import.meta.env.VITE_API_URL : "/api"
 const route = useRoute()
 const userInfo = ref()
@@ -65,7 +65,7 @@ const getInitialProps = async () => {
       const params = new URLSearchParams()
       params.append("grant_type", "authorization_code")
       params.append("code", lineCode)
-      params.append("redirect_uri", "http://localhost:5173/tt3/login")
+      params.append("redirect_uri", "http://capstone23.sit.kmutt.ac.th/tt3/login")
       params.append("client_id", "2003424448")
       params.append("client_secret", "6448af88b9fa3786a350bd4ee089c532")
 
@@ -101,7 +101,7 @@ const getInitialProps = async () => {
     if (userInfo.value) {
       await axios
         .post(`${url}/users/register`, {
-          username: userInfo.value.profile.sub,
+          lineId: userInfo.value.profile.sub,
           displayName: userInfo.value.profile.name,
           picture: userInfo.value.profile.picture,
           registerType: "LINE",
@@ -168,6 +168,12 @@ function signUp() {
     })
 }
 
+function resetPs() {
+  axios.put(`${url}/login/forgot-password`, {
+    email: email.value
+  })
+}
+
 // function CropSuccess(cropData) {
 //   imgData.value = cropData
 // }
@@ -204,7 +210,7 @@ function signUp() {
       </div>
 
       <div class="formText pt-6">
-        Email / Username <br />
+        Email <br />
         <input
           v-model="userName"
           type="text"
@@ -339,6 +345,7 @@ function signUp() {
       <div class="formText">
         Email <br />
         <input
+          v-model="email"
           type="text"
           required
           class="textInput"
@@ -353,6 +360,7 @@ function signUp() {
         <BtnComponent
           :btn-property="resetBtn"
           class="btn"
+          @click="resetPs()"
         />
       </div>
     </div>
