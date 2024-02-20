@@ -14,6 +14,8 @@ const passWord = ref("")
 const displayName = ref("")
 const errorMsg = ref("")
 // let imgData = ref("")
+const regisErrorMsg = ref("")
+const rePassWord = ref("")
 
 let btnProp = {
   btnName: "Login",
@@ -145,15 +147,25 @@ function login(user, pass) {
 }
 
 function signUp() {
-  axios
+  if(passWord.value != rePassWord.value){
+    regisErrorMsg.value = 'Password ไม่ตรงกัน'
+  }
+  else if(passWord.value == rePassWord.value) {
+    axios
     .post(`${url}/users/register`, {
       email: email.value,
       password: passWord.value,
       displayName: displayName.value,
       registerType: "WEB",
     })
+    .catch(function(error) {
+        console.log(error)
+        regisErrorMsg.value = error.response.data.message
+        return;
+    })
     .then(() => {
-      axios
+      if(regisErrorMsg.value == ''){
+axios
         .post(`${url}/login`, {
           email: email.value,
           password: passWord.value,
@@ -163,7 +175,11 @@ function signUp() {
           localStorage.setItem("access_token", res.data.accessToken)
           router.push({ name: "Home" })
         })
+      }
+      
     })
+  }
+  
 }
 
 function resetPs() {
@@ -259,6 +275,13 @@ function resetPs() {
       />
     </div>
     <div class="info altFont w-4/6">
+      <div
+        v-show="regisErrorMsg != ''"
+        class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 my-3 rounded relative"
+        role="alert"
+      >
+        <span class="block sm:inline">{{ regisErrorMsg }}</span>
+      </div>
       <div class="formText pt-4">
         Email <br />
         <input
@@ -266,6 +289,7 @@ function resetPs() {
           type="text"
           required
           class="textInput"
+          @click="regisErrorMsg = ''"
         />
       </div>
       <div class="formText pt-4">
@@ -275,14 +299,17 @@ function resetPs() {
           type="password"
           required
           class="textInput"
+          @click="regisErrorMsg = ''"
         />
       </div>
       <div class="formText pt-4">
         Re-type password <br />
         <input
+          v-model="rePassWord"
           type="password"
           required
           class="textInput"
+          @click="regisErrorMsg = ''"
         />
       </div>
       <div class="formText pt-4">
@@ -292,6 +319,7 @@ function resetPs() {
           type="text"
           required
           class="textInput"
+          @click="regisErrorMsg = ''"
         />
       </div>
       <!-- <div class="formText pt-6 pb-6">
