@@ -14,7 +14,6 @@ const passWord = ref("")
 const displayName = ref("")
 const errorMsg = ref("")
 // let imgData = ref("")
-const regisErrorMsg = ref("")
 const rePassWord = ref("")
 
 let btnProp = {
@@ -59,6 +58,10 @@ const lineLoginUrl =
 const url = import.meta.env.PROD ? import.meta.env.VITE_API_URL : "/api"
 const route = useRoute()
 const userInfo = ref()
+
+onMounted(() => {
+  getInitialProps()
+})
 
 const getInitialProps = async () => {
   const lineCode = route.query.code
@@ -111,7 +114,7 @@ const getInitialProps = async () => {
         .then(async () => {
           await axios
             .post(`${url}/login`, {
-              username: userInfo.value.profile.sub,
+              lineId: userInfo.value.profile.sub,
               channelId: userInfo.value.profile.aud,
               registerType: "LINE"
             })
@@ -127,15 +130,43 @@ const getInitialProps = async () => {
   }
 }
 
-onMounted(() => {
-  getInitialProps()
-})
+function isValidate() {
+  const regExp = new RegExp(/^\S+@\S+\.\S+$/)
+  if(email.value.trim() == '') {
+    errorMsg.value = 'อีเมลไม่สามารถเว้นว่างได้'
+    return false
+  }
+  else if(!regExp.test(email.value.trim())){
+      errorMsg.value = 'กรุณากรอกอีเมลที่ถูกต้อง'
+      return false
+  }  
+  else if(passWord.value == '' && (Mode.value == 'sign-up' || Mode.value == 'login')){
+    errorMsg.value = 'รหัสผ่านไม่สามารถเว้นว่างได้'
+    return false
+  }
 
-function login(user, pass) {
-  axios
+  else if(Mode.value == 'sign-up'){
+    if(passWord.value != rePassWord.value) {
+      errorMsg.value = 'รหัสผ่านไม่ตรงกัน'
+      return false
+    }
+    else if(displayName.value.trim() == '') {
+      errorMsg.value = 'กรุณาใส่ชื่อที่ต้องการเเสดง'
+      return false
+    }
+  }
+
+  else {
+    return true
+  }
+}
+
+function login() {
+  if(isValidate() == true){
+    axios
     .post(`${url}/login`, {
-      email: user,
-      password: pass,
+      email: email.value.trim(),
+      password: passWord.value,
       registerType: "WEB"
     }).catch(function(error) {
       errorMsg.value = error.response.data.message
@@ -144,28 +175,26 @@ function login(user, pass) {
       localStorage.setItem("access_token", res.data.accessToken)
       router.push({ name: "Home" })
     })
+  }
 }
 
 function signUp() {
-  if(passWord.value != rePassWord.value){
-    regisErrorMsg.value = 'Password ไม่ตรงกัน'
-  }
-  else if(passWord.value == rePassWord.value) {
+  if(isValidate() == true) {
     axios
     .post(`${url}/users/register`, {
-      email: email.value,
+      email: email.value.trim(),
       password: passWord.value,
-      displayName: displayName.value,
+      displayName: displayName.value.trim(),
       registerType: "WEB",
     })
     .catch(function(error) {
         console.log(error)
-        regisErrorMsg.value = error.response.data.message
+        errorMsg.value = error.response.data.message
         return;
     })
     .then(() => {
-      if(regisErrorMsg.value == ''){
-axios
+      if(errorMsg.value == ''){
+        axios
         .post(`${url}/login`, {
           email: email.value,
           password: passWord.value,
@@ -182,10 +211,14 @@ axios
   
 }
 
+
 function resetPs() {
-  axios.put(`${url}/login/forgot-password`, {
+  if(isValidate() == true){
+    axios.put(`${url}/login/forgot-password`, {
     email: email.value
-  })
+    })
+  }
+
 }
 
 // function CropSuccess(cropData) {
@@ -226,7 +259,7 @@ function resetPs() {
       <div class="formText pt-6">
         Email <br />
         <input
-          v-model="userName"
+          v-model="email"
           type="text"
           required
           class="textInput"
@@ -247,17 +280,17 @@ function resetPs() {
         <BtnComponent
           :btn-property="btnProp"
           class="btn"
-          @click="login(userName, passWord)"
+          @click="login()"
         />
         <span
           class="btn altFont pl-7 pt-2"
-          @click="Mode = 'sign-up'"
+          @click="Mode = 'sign-up', errorMsg = ''"
           >Need to sign up</span
         >
       </div>
       <p
         class="btn altFont text-center text-[#FF0000]"
-        @click="Mode = 'fgPass'"
+        @click="Mode = 'fgPass' , errorMsg = ''"
       >
         Forgotten password?
       </p>
@@ -276,11 +309,11 @@ function resetPs() {
     </div>
     <div class="info altFont w-4/6">
       <div
-        v-show="regisErrorMsg != ''"
+        v-show="errorMsg != ''"
         class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 my-3 rounded relative"
         role="alert"
       >
-        <span class="block sm:inline">{{ regisErrorMsg }}</span>
+        <span class="block sm:inline">{{ errorMsg }}</span>
       </div>
       <div class="formText pt-4">
         Email <br />
@@ -289,7 +322,7 @@ function resetPs() {
           type="text"
           required
           class="textInput"
-          @click="regisErrorMsg = ''"
+          @click="errorMsg = ''"
         />
       </div>
       <div class="formText pt-4">
@@ -299,7 +332,7 @@ function resetPs() {
           type="password"
           required
           class="textInput"
-          @click="regisErrorMsg = ''"
+          @click="errorMsg = ''"
         />
       </div>
       <div class="formText pt-4">
@@ -309,7 +342,7 @@ function resetPs() {
           type="password"
           required
           class="textInput"
-          @click="regisErrorMsg = ''"
+          @click="errorMsg = ''"
         />
       </div>
       <div class="formText pt-4">
@@ -319,7 +352,7 @@ function resetPs() {
           type="text"
           required
           class="textInput"
-          @click="regisErrorMsg = ''"
+          @click="errorMsg = ''"
         />
       </div>
       <!-- <div class="formText pt-6 pb-6">
@@ -350,7 +383,7 @@ function resetPs() {
         />
         <span
           class="btn altFont pl-7 pt-2"
-          @click="Mode = 'login'"
+          @click="Mode = 'login' , errorMsg = ''"
           >I already have account</span
         >
       </div>
@@ -368,6 +401,13 @@ function resetPs() {
       />
     </div>
     <div class="info altFont w-4/6 self-center">
+      <div
+        v-show="errorMsg != ''"
+        class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 my-3 rounded relative"
+        role="alert"
+      >
+        <span class="block sm:inline">{{ errorMsg }}</span>
+      </div>
       <div class="formText">
         Email <br />
         <input
@@ -375,13 +415,14 @@ function resetPs() {
           type="text"
           required
           class="textInput"
+          @click="errorMsg = ''"
         />
       </div>
       <div class="pt-28 flex">
         <BtnComponent
           :btn-property="cancelBtn"
           class="btn pr-20"
-          @click="Mode = 'login'"
+          @click="Mode = 'login' , errorMsg = ''"
         />
         <BtnComponent
           :btn-property="resetBtn"
