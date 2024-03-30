@@ -30,6 +30,7 @@ function imageUrl(){
 .default {
   display: flex;
   align-items: center;
+  white-space: pre-line;
 }
 
 
