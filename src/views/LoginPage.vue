@@ -1,7 +1,7 @@
 <script setup>
 import BtnComponent from "../components/BtnComponent.vue"
 import { ref, onMounted } from "vue"
-// import uploadImg from "vue-image-crop-upload"
+import uploadImg from "vue-image-crop-upload"
 import { useRoute } from "vue-router"
 import axios from "axios"
 import router from "../router"
@@ -10,16 +10,16 @@ localStorage.setItem("page", "Login")
 const Mode = ref("login")
 const email = ref("")
 const passWord = ref("")
-// const isUpload = ref(false)
+const isUpload = ref(false)
 const displayName = ref("")
 const errorMsg = ref("")
-// let imgData = ref("")
+let imgData = ref("")
+let img = new Image()
 const rePassWord = ref("")
+var formData = new FormData();
 
 let btnProp = {
   btnName: "Login",
-  iconPath: "",
-  bgColor: "#484848",
   width: "12em"
 }
 
@@ -35,7 +35,6 @@ let resetBtn = {
 
 let cancelBtn = {
   btnName: "Cancel",
-  iconPath: "",
   bgColor: "black",
   width: "12em"
 }
@@ -54,7 +53,7 @@ let lineBtn = {
 }
 
 const lineLoginUrl =
-"https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=2003424448&redirect_uri=http%3A%2F%2Fcapstone23.sit.kmutt.ac.th%2Ftt3%2Flogin&state=cp23tt3mtj&scope=profile%20openid"
+"https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=2003424448&redirect_uri=https%3A%2F%2Fcapstone23.sit.kmutt.ac.th%2Ftt3%2Flogin&state=cp23tt3mtj&scope=profile%20openid%20email"
 const url = import.meta.env.PROD ? import.meta.env.VITE_API_URL : "/api"
 const route = useRoute()
 const userInfo = ref()
@@ -70,8 +69,8 @@ const getInitialProps = async () => {
       const params = new URLSearchParams()
       params.append("grant_type", "authorization_code")
       params.append("code", lineCode)
-      params.append("redirect_uri", "http://capstone23.sit.kmutt.ac.th/tt3/login")
-      params.append("client_id", "2003424448")
+      params.append("redirect_uri", "https://capstone23.sit.kmutt.ac.th/tt3/login")
+            params.append("client_id", "2003424448")
       params.append("client_secret", "6448af88b9fa3786a350bd4ee089c532")
 
       const request = await axios.post(
@@ -106,6 +105,7 @@ const getInitialProps = async () => {
       await axios
         .post(`${url}/users/register`, {
           lineId: userInfo.value.profile.sub,
+          email: userInfo.value.profile.email,
           displayName: userInfo.value.profile.name,
           picture: userInfo.value.profile.picture,
           registerType: "LINE",
@@ -154,6 +154,9 @@ function isValidate() {
       errorMsg.value = 'กรุณาใส่ชื่อที่ต้องการเเสดง'
       return false
     }
+    else {
+      return true
+    }
   }
 
   else {
@@ -179,14 +182,24 @@ function login() {
 }
 
 function signUp() {
+  console.log(CropSuccess(imgData.value)),
+  console.log(isValidate())
+  const headerConfig = {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  }
   if(isValidate() == true) {
     axios
-    .post(`${url}/users/register`, {
+    .post(`${url}/users/register`, 
+    {
       email: email.value.trim(),
       password: passWord.value,
       displayName: displayName.value.trim(),
+      picture: CropSuccess(imgData.value),
       registerType: "WEB",
-    })
+    },
+    headerConfig, )
     .catch(function(error) {
         console.log(error)
         errorMsg.value = error.response.data.message
@@ -211,19 +224,32 @@ function signUp() {
   
 }
 
-
 function resetPs() {
   if(isValidate() == true){
     axios.put(`${url}/login/forgot-password`, {
     email: email.value
     })
+    .catch(function(error) {
+        errorMsg.value = error.response.data.message
+        return;
+    })
   }
 
 }
 
-// function CropSuccess(cropData) {
-//   imgData.value = cropData
-// }
+
+function CropSuccess(cropData) {
+  imgData.value = cropData
+  img.src = cropData
+  const imgType = imgData.value.split(/:(.*?);/)[1];
+  const base64 = imgData.value.split('base64,')[1];
+  const fileSurname = imgType.split('/')[1];
+  const blob = new Blob([atob(base64)], { type: imgType });
+  const file = new File([blob], `profileImage.${fileSurname}`, { type: imgType });
+  console.log(file)
+  console.log(imgData.value)
+  return file
+}
 </script>
 
 <template>
@@ -355,7 +381,7 @@ function resetPs() {
           @click="errorMsg = ''"
         />
       </div>
-      <!-- <div class="formText pt-6 pb-6">
+      <div class="formText pt-6 pb-6">
         Choose Your Profile Picture<br />
         <button @click="isUpload = true">upload image</button>
         <div class="pt-3">
@@ -374,7 +400,7 @@ function resetPs() {
             @crop-success="CropSuccess"
           ></uploadImg>
         </div>
-      </div> -->
+      </div>
       <div class="py-8 flex">
         <BtnComponent
           :btn-property="signUpBtn"

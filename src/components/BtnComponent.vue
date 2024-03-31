@@ -11,7 +11,7 @@ function imageUrl(){
 <template>
   <div>
     <button class="default" :class="btnProperty.class" :style="{backgroundColor: btnProperty.bgColor, width: btnProperty.width, height: btnProperty.height, justifyContent: btnProperty.iconPath ? '' : 'space-evenly'}">
-      <span v-if="btnProperty.iconPath != ''">
+      <span v-if="btnProperty.iconPath != '' && btnProperty.iconPath != undefined">
         <img
           :src="imageUrl()"
           :alt="btnProperty.iconAlt"
@@ -30,6 +30,8 @@ function imageUrl(){
 .default {
   display: flex;
   align-items: center;
+  white-space: pre-line;
+  background-color: #484848;
 }
 
 

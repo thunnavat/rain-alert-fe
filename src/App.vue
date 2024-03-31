@@ -5,11 +5,18 @@ import { ref } from "vue"
 import router from "./router"
 import { userData } from "./store/userData"
 import { onMounted } from "vue"
+import { UserDataApi } from "./util/utils"
 
-const storeProvince = userData()
+const user = userData()
 
 onMounted(() => {
-  storeProvince.getLoginStatus
+  UserDataApi.getDistrict()
+  user.getLoginStatus
+  console.log(user.getUserData)
+  if(Date.now() >= user.getUserData.exp * 1000){
+    localStorage.removeItem('access_token')
+    window.location.reload()
+  }
 })
 
 
@@ -23,8 +30,8 @@ let btnProp = {
 }
 
 let ProfileIcon = {
-  btnName: storeProvince.getUserData.displayName,
-  iconPath: '',
+  btnName: user.getUserData.displayName,
+  iconPath: import.meta.env.PROD ?  import.meta.env.VITE_IMAGE_PATH + 'DefaultProfile.png' : '/DefaultProfile.png',
   bgColor: 'black'
 }
 
@@ -43,8 +50,9 @@ function navigateToHome() {
 }
 
 function navigateToProfile() {
-  localStorage.removeItem("access_token")
-  window.location.reload()
+  router.push({ name: "Profile" })
+  // localStorage.removeItem("access_token")
+  // window.location.reload()
 }
 </script>
 
@@ -65,14 +73,14 @@ function navigateToProfile() {
       />
     
         <BtnComponent
-        v-if="storeProvince.getUserData == 'Token not found'"
+        v-if="user.getUserData == 'Token not found'"
         class="loginBtn bg-[#171717]"
         :btn-property="btnProp"
         @click="login()"
         />
   
         <BtnComponent
-        v-else-if="storeProvince.getUserData != 'Token not found'"
+        v-else-if="user.getUserData != 'Token not found'"
         class="loginBtn"
         :btn-property="ProfileIcon"
         @click="navigateToProfile()"
@@ -120,9 +128,6 @@ function navigateToProfile() {
   align-items: center;
 }
 
-.navBar:hover {
-  cursor: pointer;
-}
 .loginBtn {
   position: absolute;
   right: 5em;

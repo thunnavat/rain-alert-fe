@@ -1,20 +1,27 @@
 <script setup>
 import InformationBox from "../components/InformationBox.vue"
+import LoadingComponent from "../components/LoadingComponent.vue"
 import { ref, onBeforeMount, onMounted } from "vue"
 import axios from "axios"
 import moment from "moment"
-import { userData } from "../store/userData"
+import { userData, userSubscribe } from "../store/userData"
 onBeforeMount(() => {
-  getReports()
+  getReports().then(() => {
+    isLoading.value = false
+  })
 })
 
+const isLoading = ref(true)
 
-const storeProvince = userData()
+const user = userData()
+const storeProvince = userSubscribe()
 
 onMounted(() => {
-  if(localStorage.getItem('access_token') != null && storeProvince.getLoginStatus != 1){
+  if((localStorage.getItem('access_token') != null && user.getLoginStatus != 1) 
+    || (localStorage.getItem('access_token') == null && user.getLoginStatus == 1)){
     window.location.reload()
   }
+  
 })
 localStorage.setItem('page', 'Home')
 const random = ref([])
@@ -38,6 +45,11 @@ const getReports = async (reportTime) => {
     ? moment(reportTime).toISOString(true).slice(0, -13) + "Z"
     : moment(time[0].reportTime).toISOString().slice(0, -8) + "Z"
   axios.get(`${url}/reports?specificTime=${modifiedTime}`).then((res) => {
+    const data = ref([])
+    for(let i = 0; i < res.data.length; i++) {
+      data.value.push(res.data[i])
+    }
+    console.log(res.data)
     for (let i = 0; i < 4; i++) {
       favorites.value.push({
         district: res.data[randoms[i]].reportDistrict.districtName,
@@ -76,8 +88,9 @@ const favorites = ref([])
     <div class="content">
       <!-- <h3>Daily Weather Forecast</h3> -->
       <!-- <InformationBox :info-boxs="infoBoxs" /> -->
+      <loading-component v-if="isLoading == true"/>
       <InformationBox
-        v-if="favorites.length != 0"
+        v-if="favorites.length != 0 && isLoading == false"
         :info-boxs="favorites"
       />
     </div>

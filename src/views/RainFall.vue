@@ -1,6 +1,7 @@
 <script setup>
 import axios from "axios"
 import TableComponent from "../components/TableComponent.vue"
+import LoadingComponent from "../components/LoadingComponent.vue"
 import { ref, onBeforeMount } from "vue"
 import moment from "moment"
 
@@ -12,10 +13,13 @@ const options = ref()
 const sort = ref()
 const selectedVal = ref()
 const selectedStatus = ref("all")
+const isLoading = ref(true)
 
 onBeforeMount(() => {
   getTimes()
-  getReports()
+  getReports().then(() => {
+    isLoading.value = false
+  })
 })
 
 const reports = ref([])
@@ -83,7 +87,9 @@ function doGetReport() {
 
 <template>
   <div>
-    <TableComponent
+    <loading-component v-if="isLoading == true"/>
+    <TableComponent 
+      v-if="isLoading == false"
       :options="options"
       :headers="headers"
       :columns="reports"

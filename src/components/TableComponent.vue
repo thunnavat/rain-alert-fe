@@ -75,10 +75,9 @@ function selectedStatus(selectStatus) {
 
 <template>
   <div
-    v-if="options.length != 0"
     class="table"
   >
-    <div v-if="mode == 'districtReport'">
+    <div v-if="mode == 'districtReport' && options.length != 0">
       <div class="header">
         <h3>Rain reports</h3>
         <span class="text-sm">Report 50 district of Bangkok</span>
@@ -103,7 +102,7 @@ function selectedStatus(selectStatus) {
       </div>
     </div>
 
-    <div class="sub-header">
+    <div class="sub-header" :class="headers.length == 1 ? 'flex justify-center' : 'flex justify-between'">
       <div
         v-for="(header, index) in headers"
         :key="index"
@@ -118,7 +117,7 @@ function selectedStatus(selectStatus) {
               : ''
           "
         >
-          {{ header }}
+          {{ header }} 
           <DropDownComponent
             :type="'icon'"
             :icon-name="header.toLowerCase()"
@@ -166,9 +165,8 @@ function selectedStatus(selectStatus) {
 }
 
 .sub-header {
-  display: flex;
-  justify-content: space-between;
   padding: 1em 0em;
+
 
   background-color: #353535;
   background: linear-gradient(to bottom, #353535 4em, transparent 0);
