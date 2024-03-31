@@ -9,6 +9,9 @@ import { UserDataApi } from "../util/utils"
 
 localStorage.setItem("page", "Profile")
 
+const notifyText = ref("")
+const GetNotified = ref(false)
+notifyText.value = "Need Line or Email Notification"
 const navNames = ["Preference", "Reset Password"]
 const navSelected = ref("")
 const storeProvince = userSubscribe()
@@ -32,8 +35,7 @@ let lineBtn = {
 
 let btnProperty = {
   btnName: "Reset\nPassword",
-  iconPath: "",
-  bgColor: "13161B",
+  bgColor: "#13161B",
   height: "5rem"
 }
 
@@ -76,7 +78,13 @@ const imageUrl = import.meta.env.PROD
       />
     </div>
     <div class="w-4/6 flex flex-col items-center text-lg">
-      <BtnComponent :btn-property="lineBtn" />
+      <div class="flex justify-evenly w-full">
+        <BtnComponent :btn-property="lineBtn" />
+        <span class="pt-3">
+          <input type="checkbox" id="emailNotify">
+          <label class="pl-3 select-none" for="emailNotify">Get Email Notification</label>
+        </span>
+      </div>
       <div
         v-if="navSelected == 'Preference'"
         class="w-full"
@@ -93,8 +101,9 @@ const imageUrl = import.meta.env.PROD
             <div class="w-1/5">
               {{ province }}
             </div>
+            <input type="checkbox" v-if="GetNotified == true">
             <div>
-              <span> Need to connect with line </span>
+              <span> {{ notifyText }} </span>
             </div>
             <span
               class="text-red-600 cursor-pointer select-none"

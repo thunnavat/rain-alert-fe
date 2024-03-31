@@ -1,7 +1,7 @@
 <script setup>
-import { ref, onMounted } from "vue"
+import { ref } from "vue"
 import BtnComponent from "../components/BtnComponent.vue"
-import { userSubscribe } from "../store/userData.js"
+import { userSubscribe, userData } from "../store/userData.js"
 import { UserDataApi } from "../util/utils"
 import router from "../router"
 
@@ -10,13 +10,9 @@ const selectedDistrict = ref("")
 
 const isZoom = ref(false)
 const storeProvince = userSubscribe()
-const isLoggedIn = !(UserDataApi.getDistrict() == "Not Logged In Yet")
+const user = userData()
+const isLoggedIn = user.getLoginStatus == 1
 
-onMounted(() => {
-  UserDataApi.getDistrict()
-})
-
-// UserDataApi.getDistrict()
 function navigateToLogin() {
   router.push({name: "Login"})
 }
@@ -280,8 +276,6 @@ const districts = [
 
 const zoomBtn = {
   btnName: "Zoom Image",
-  iconPath: "",
-  bgColor: "#484848",
   width: "12em"
 }
 </script>
@@ -302,7 +296,7 @@ const zoomBtn = {
       v-show="storeProvince.provinces != ''"
       class="absolute top-1/2 h-96 overflow-y-auto px-10"
     >
-      <p>Your Current Subsciption List Is</p>
+      <p>Your Current Subsciption List Are</p>
       <ul
         v-for="(province, index) in storeProvince.provinces"
         :key="index"
