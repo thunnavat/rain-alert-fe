@@ -12,7 +12,9 @@ export const UserDataApi = {
             return axios.get(`${url}/districtUserSubscribe/${userId.getUserId.userId}`, {
                 headers: {'Authorization': `Bearer ${userId.getUserId.token}`}
             }).then((res) => {
-                userSub.setInitProvince(res.data[0].districtSubscribe);
+                if(res.data.length != 0){
+                    userSub.setInitProvince(res.data[0].districtSubscribe);
+                }
             })
 
         }
