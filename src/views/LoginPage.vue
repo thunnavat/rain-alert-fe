@@ -53,7 +53,7 @@ let lineBtn = {
 }
 
 const lineLoginUrl =
-"https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=2003424448&redirect_uri=http%3A%2F%2Fcapstone23.sit.kmutt.ac.th%2Ftt3%2Flogin&state=cp23tt3mtj&scope=profile%20openid"
+"https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=2003424448&redirect_uri=https%3A%2F%2Fcapstone23.sit.kmutt.ac.th%2Ftt3%2Flogin&state=cp23tt3mtj&scope=profile%20openid%20email"
 const url = import.meta.env.PROD ? import.meta.env.VITE_API_URL : "/api"
 const route = useRoute()
 const userInfo = ref()
@@ -69,8 +69,8 @@ const getInitialProps = async () => {
       const params = new URLSearchParams()
       params.append("grant_type", "authorization_code")
       params.append("code", lineCode)
-      params.append("redirect_uri", "http://capstone23.sit.kmutt.ac.th/tt3/login")
-      params.append("client_id", "2003424448")
+      params.append("redirect_uri", "https://capstone23.sit.kmutt.ac.th/tt3/login")
+            params.append("client_id", "2003424448")
       params.append("client_secret", "6448af88b9fa3786a350bd4ee089c532")
 
       const request = await axios.post(
@@ -105,6 +105,7 @@ const getInitialProps = async () => {
       await axios
         .post(`${url}/users/register`, {
           lineId: userInfo.value.profile.sub,
+          email: userInfo.value.profile.email,
           displayName: userInfo.value.profile.name,
           picture: userInfo.value.profile.picture,
           registerType: "LINE",
