@@ -1,5 +1,5 @@
 <script setup>
-import { userSubscribe, userData } from "../store/userData"
+import { userData } from "../store/userData"
 import BtnComponent from "../components/BtnComponent.vue"
 import NavComponent from "../components/NavComponent.vue"
 import { ref, onMounted } from "vue"
@@ -13,23 +13,28 @@ const notifyText = ref("")
 const GetNotified = ref(false)
 const url = import.meta.env.PROD ? import.meta.env.VITE_API_URL : "/api"
 notifyText.value = "Need Line or Email Notification"
-const navNames = ["Preference", "Reset Password"]
+const navNames = ["Preference", "Change Password"]
 const navSelected = ref("")
-const storeProvince = userSubscribe()
 const profile = userData()
+const imageUrl = ref()
 onMounted(() => {
   navSelected.value = "Preference"
+  getInitialProps()
+  imageUrl.value = profile.picture == null ?
+  import.meta.env.PROD ?  import.meta.env.VITE_IMAGE_PATH + 'DefaultProfile.png' : '/DefaultProfile.png':
+  profile.picture
   profile.getProfile()
 })
 
 let btnProperty = {
-  btnName: "Reset\nPassword",
+  btnName: "Confirm",
   bgColor: "#13161B",
-  height: "5rem"
+  height: "5rem",
+  width: "14rem"
 }
 
 function setProvinces(name) {
-  storeProvince.removeProvince(name)
+  profile.removeProvince(name)
   UserDataApi.setDistrict()
 }
 
@@ -38,7 +43,7 @@ function changeRoute(route) {
   console.log(navSelected.value)
 }
 
-const imageUrl = import.meta.env.PROD
+imageUrl.value = import.meta.env.PROD
   ? import.meta.env.VITE_IMAGE_PATH + "DefaultProfile.png"
   : "/DefaultProfile.png"
 
@@ -158,8 +163,12 @@ const checkEmailNotification = async () => {
           <div class="pb-5 mt-5 border-solid border-black border-0 border-b-2">
             My Favorites
           </div>
+          <div v-if="profile.districtSubscribed.length == 0" class="py-10">
+            You Currently Have No District Subscribed
+          </div>
           <div
-            v-for="(province, index) in storeProvince.provinces"
+            v-else-if="profile.districtSubscribed.length > 0"
+            v-for="(province, index) in profile.districtSubscribed"
             :key="index"
             class="flex justify-evenly my-9"
           >
@@ -182,7 +191,7 @@ const checkEmailNotification = async () => {
         </div>
       </div>
       <div
-        v-else-if="navSelected == 'Reset Password'"
+        v-else-if="navSelected == 'Change Password'"
         class="w-full flex justify-evenly bg-[#191d23] mt-16 rounded-lg"
       >
         <div class="w-1/2">

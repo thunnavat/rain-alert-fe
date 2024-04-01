@@ -4,7 +4,7 @@ import LoadingComponent from "../components/LoadingComponent.vue"
 import { ref, onBeforeMount, onMounted } from "vue"
 import axios from "axios"
 import moment from "moment"
-import { userData, userSubscribe } from "../store/userData"
+import { userData } from "../store/userData"
 onBeforeMount(() => {
   getReports().then(() => {
     isLoading.value = false
@@ -13,12 +13,11 @@ onBeforeMount(() => {
 
 const isLoading = ref(true)
 
-const user = userData()
-const storeProvince = userSubscribe()
+const profile = userData()
 
 onMounted(() => {
-  if((localStorage.getItem('access_token') != null && user.loginStatus != true) 
-    || (localStorage.getItem('access_token') == null && user.loginStatus != false)){
+  if((localStorage.getItem('access_token') != null && profile.loginStatus != true) 
+    || (localStorage.getItem('access_token') == null && profile.loginStatus != false)){
     window.location.reload()
   }
   

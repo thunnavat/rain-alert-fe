@@ -15,9 +15,7 @@ const isUpload = ref(false)
 const displayName = ref("")
 const errorMsg = ref("")
 let imgData = ref("")
-let img = new Image()
 const rePassWord = ref("")
-var formData = new FormData()
 const profile = userData()
 
 let btnProp = {
@@ -176,16 +174,15 @@ function login() {
       .catch(function (error) {
         errorMsg.value = error.response.data.message
       })
-      .then((res) => {
+      .then(async(res) => {
         localStorage.setItem("access_token", res.data.accessToken)
-        profile.getProfile()
+        await profile.getProfile() 
         router.push({ name: "Home" })
       })
   }
 }
 
 function signUp() {
-  console.log(CropSuccess(imgData.value)), console.log(isValidate())
   const headerConfig = {
     headers: {
       "Content-Type": "multipart/form-data"
@@ -199,7 +196,7 @@ function signUp() {
           email: email.value.trim(),
           password: passWord.value,
           displayName: displayName.value.trim(),
-          picture: CropSuccess(imgData.value),
+          picture: imgData.value != '' ? UploadPicture(imgData.value) : '',
           registerType: "WEB"
         },
         headerConfig
@@ -217,9 +214,9 @@ function signUp() {
               password: passWord.value,
               registerType: "WEB"
             })
-            .then((res) => {
+            .then(async(res) => {
               localStorage.setItem("access_token", res.data.accessToken)
-              profile.getProfile()
+              await profile.getProfile() 
               router.push({ name: "Home" })
             })
         }
@@ -242,18 +239,25 @@ function resetPs() {
 
 function CropSuccess(cropData) {
   imgData.value = cropData
-  img.src = cropData
-  const imgType = imgData.value.split(/:(.*?);/)[1]
-  const base64 = imgData.value.split("base64,")[1]
-  const fileSurname = imgType.split("/")[1]
-  const blob = new Blob([atob(base64)], { type: imgType })
-  const file = new File([blob], `profileImage.${fileSurname}`, {
-    type: imgType
-  })
-  console.log(file)
-  console.log(imgData.value)
+}
+
+function UploadPicture(cropData) {
+  const file = dataURLtoFile(cropData, 'profile.jpg')
   return file
 }
+
+function dataURLtoFile(dataurl, filename) {
+    var arr = dataurl.split(","),
+      mime = arr[0].match(/:(.*?);/)[1],
+      bstr = atob(arr[arr.length - 1]),
+      n = bstr.length,
+      u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
+  }
+
 </script>
 
 <template>
@@ -401,6 +405,7 @@ function CropSuccess(cropData) {
             v-model="isUpload"
             lang-type="en"
             :no-square="true"
+            :img-format="'jpg'"
             @crop-success="CropSuccess"
           ></uploadImg>
         </div>

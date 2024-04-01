@@ -1,28 +1,29 @@
 <script setup>
 import { ref } from "vue"
 import BtnComponent from "../components/BtnComponent.vue"
-import { userSubscribe, userData } from "../store/userData.js"
+import { userData } from "../store/userData.js"
 import { UserDataApi } from "../util/utils"
 import router from "../router"
 
 localStorage.setItem("page", "Subscribe")
 const selectedDistrict = ref("")
 
-const isZoom = ref(false)
-const storeProvince = userSubscribe()
-const user = userData()
-const isLoggedIn = user.getLoginStatus == 1
 
+const isZoom = ref(false)
+const profile = userData()
+console.log(profile.districtSubscribed)
+const isLoggedIn = profile.loginStatus
 function navigateToLogin() {
   router.push({name: "Login"})
 }
 
 function setProvinces(name) {
-  if (storeProvince.provinces.includes(name)) {
-    storeProvince.removeProvince(name)
+  console.log(profile.districtSubscribed)
+  if (profile.districtSubscribed.includes(name)) {
+    profile.removeProvince(name)
     UserDataApi.setDistrict()
-  } else if (storeProvince.provinces.includes(name) == false) {
-    storeProvince.setProvince(name)
+  } else if (profile.districtSubscribed.includes(name) == false) {
+    profile.setProvince(name)
     UserDataApi.setDistrict()
   }
 }
@@ -293,12 +294,12 @@ const zoomBtn = {
       Your Selected District Is {{ selectedDistrict ? selectedDistrict : "-" }}
     </p>
     <div
-      v-show="storeProvince.provinces != ''"
+      v-show="profile.districtSubscribed != ''"
       class="absolute top-1/2 h-96 overflow-y-auto px-10"
     >
       <p>Your Current Subsciption List Are</p>
       <ul
-        v-for="(province, index) in storeProvince.provinces"
+        v-for="(province, index) in profile.districtSubscribed"
         :key="index"
         class=""
       >
@@ -330,7 +331,7 @@ const zoomBtn = {
         fill="transparent"
         stroke-miterlimit="10"
         :class="
-          storeProvince.provinces.includes(district.name) ? 'favorited' : 'poly'
+          profile.districtSubscribed.includes(district.name) ? 'favorited' : 'poly'
         "
         @click="setProvinces(district.name)"
         @mouseenter="selectedDistrict = district.name"

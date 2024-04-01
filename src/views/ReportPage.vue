@@ -1,5 +1,4 @@
 <script setup>
-import { UserDataApi } from "../util/utils"
 import { userData } from "../store/userData"
 import router from "../router"
 import uploadImg from "vue-image-crop-upload"
@@ -7,8 +6,8 @@ import { ref } from "vue"
 import BtnComponent from "../components/BtnComponent.vue"
 
 localStorage.setItem('page', 'Report Bug')
-const user = userData()
-const isLoggedIn = user.getLoginStatus == 1
+const profile = userData()
+const isLoggedIn = profile.loginStatus
 const isUpload = ref(false)
 const btnProperty = {
   btnName: 'Send'

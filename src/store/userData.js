@@ -90,28 +90,12 @@ export const userData = defineStore("data", {
         this.notifyToken = data.notifyToken
         this.notificationByLine = data.notificationByLine
         this.notificationByEmail = data.notificationByEmail
-    }
-  }
-})
-
-export const userSubscribe = defineStore("province", {
-  state: () => ({
-    provinces: []
-  }),
-  getters: {
-    getProvinces(state) {
-      return state
-    }
-  },
-  actions: {
-    setInitProvince(province) {
-      this.provinces = province
     },
     setProvince(province) {
-      this.provinces.push(province)
+      this.districtSubscribed.push(province)
     },
     removeProvince(province) {
-      this.provinces = this.provinces.filter((p) => !p.includes(province))
+      this.districtSubscribed = this.districtSubscribed.filter((p) => !p.includes(province))
     }
   }
 })
