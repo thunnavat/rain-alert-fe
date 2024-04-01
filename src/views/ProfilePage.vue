@@ -5,11 +5,10 @@ import NavComponent from "../components/NavComponent.vue"
 import { ref, onMounted } from "vue"
 import { UserDataApi } from "../util/utils"
 import axios from "axios"
-import { useRoute } from "vue-router"
+import { jwtDecode } from "jwt-decode"
 
 localStorage.setItem("page", "Profile")
 
-const route = useRoute()
 const notifyText = ref("")
 const GetNotified = ref(false)
 const url = import.meta.env.PROD ? import.meta.env.VITE_API_URL : "/api"
@@ -20,21 +19,8 @@ const storeProvince = userSubscribe()
 const profile = userData()
 onMounted(() => {
   navSelected.value = "Preference"
-  getInitialProps()
+  profile.getProfile()
 })
-
-let lineBtn = {
-  btnName: "Get Line Notification",
-  iconPath: import.meta.env.PROD
-    ? import.meta.env.VITE_IMAGE_PATH + "LineIcon.png"
-    : "/LineIcon.png",
-  iconAlt: "LineIcon",
-  iconWidth: "40",
-  iconHeight: "40",
-  bgColor: "#06C755",
-  width: "24rem",
-  height: "3.5rem"
-}
 
 let btnProperty = {
   btnName: "Reset\nPassword",
@@ -56,83 +42,34 @@ const imageUrl = import.meta.env.PROD
   ? import.meta.env.VITE_IMAGE_PATH + "DefaultProfile.png"
   : "/DefaultProfile.png"
 
-const lineNotifyUrl =
-  "https://notify-bot.line.me/oauth/authorize?response_type=code&client_id=e48bP0urIm25wxyt3PtwM5&redirect_uri=https://capstone23.sit.kmutt.ac.th/tt3/profile&scope=notify&state=cp23tt3mtj"
-
-const getInitialProps = async () => {
-  const lineCode = route.query.code
-  try {
-    if (lineCode) {
-      const params = new URLSearchParams()
-      params.append("grant_type", "authorization_code")
-      params.append("code", lineCode)
-      params.append(
-        "redirect_uri",
-        "https://capstone23.sit.kmutt.ac.th/tt3/profile"
-      )
-      params.append("client_id", "e48bP0urIm25wxyt3PtwM5")
-      params.append(
-        "client_secret",
-        "8arayYmWrmewnhQykYRjt9i39Ml6RjsZbzaQvEWE4QZ"
-      )
-
-      const request = await axios.post(
-        "https://notify-bot.line.me/oauth/token",
-        params,
-        {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-          }
-        }
-      )
-      if (request.status == 200) {
-        const notifyToken = request.data.access_token
-        await axios
-          .put(
-            `${url}/users/updateProfile`,
-            {
-              notifyToken: notifyToken
-            },
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("access_token")}`
-              }
-            }
-          )
-          .then(() => {
-            alert("Line Notify has been successfully connected")
-            checkLineNotification()
-          })
-      }
-    }
-  } catch (error) {
-    console.log(error)
-  }
-}
-
 const checkLineNotification = async () => {
   if (profile.notificationByLine === false) {
-    if (profile.notifyToken === null || profile.notifyToken === "" || profile.notifyToken === undefined) {
+    if (
+      profile.notifyToken === null ||
+      profile.notifyToken === "" ||
+      profile.notifyToken === undefined
+    ) {
+      const userId = jwtDecode(localStorage.getItem("access_token")).userId
       alert("Please allow the permission of Line Notify first")
-      window.location.href = lineNotifyUrl
+      window.location.href = `https://notify-bot.line.me/oauth/authorize?response_type=code&client_id=e48bP0urIm25wxyt3PtwM5&redirect_uri=https://capstone23.sit.kmutt.ac.th/tt3/api/notifyCallback&scope=notify&state=${userId}`
     }
-    profile.notificationByLine = !profile.notificationByLine
-    await axios
-      .put(
-        `${url}/users/updateProfile`,
-        {
-          notificationByLine: profile.notificationByLine
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`
-          }
-        }
-      )
-      .then(() => {
-        profile.getProfile()
-      })
   }
+  profile.notificationByLine = !profile.notificationByLine
+  await axios
+    .put(
+      `${url}/users/updateProfile`,
+      {
+        notificationByLine: profile.notificationByLine
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`
+        }
+      }
+    )
+    .then(() => {
+      profile.getProfile()
+    })
 }
 
 const checkEmailNotification = async () => {
