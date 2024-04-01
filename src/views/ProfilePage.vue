@@ -23,8 +23,6 @@ onMounted(() => {
   getInitialProps()
 })
 
-console.log(profile)
-
 let lineBtn = {
   btnName: "Get Line Notification",
   iconPath: import.meta.env.PROD
@@ -89,20 +87,22 @@ const getInitialProps = async () => {
       )
       if (request.status == 200) {
         const notifyToken = request.data.access_token
-        await axios.put(
-          `${url}/user/updateProfile`,
-          {
-            notifyToken: notifyToken
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("access_token")}`
+        await axios
+          .put(
+            `${url}/users/updateProfile`,
+            {
+              notifyToken: notifyToken
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("access_token")}`
+              }
             }
-          }
-        ).then(() => {
-          alert("Line Notify has been successfully connected")
-          checkLineNotification()
-        })
+          )
+          .then(() => {
+            alert("Line Notify has been successfully connected")
+            checkLineNotification()
+          })
       }
     }
   } catch (error) {
@@ -111,16 +111,37 @@ const getInitialProps = async () => {
 }
 
 const checkLineNotification = async () => {
-  if (GetNotified.value == false) {
-    if (profile.getUserData.notifyToken == null) {
+  if (profile.notificationByLine === false) {
+    if (profile.notifyToken === null || profile.notifyToken === "" || profile.notifyToken === undefined) {
       alert("Please allow the permission of Line Notify first")
       window.location.href = lineNotifyUrl
     }
-    GetNotified.value = !GetNotified.value
-    await axios.put(
-      `${url}/user/updateProfile`,
+    profile.notificationByLine = !profile.notificationByLine
+    await axios
+      .put(
+        `${url}/users/updateProfile`,
+        {
+          notificationByLine: profile.notificationByLine
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`
+          }
+        }
+      )
+      .then(() => {
+        profile.getProfile()
+      })
+  }
+}
+
+const checkEmailNotification = async () => {
+  profile.notificationByEmail = !profile.notificationByEmail
+  await axios
+    .put(
+      `${url}/users/updateProfile`,
       {
-        notificationByLine: GetNotified.value
+        notificationByEmail: profile.notificationByEmail
       },
       {
         headers: {
@@ -128,22 +149,9 @@ const checkLineNotification = async () => {
         }
       }
     )
-  }
-}
-
-const checkEmailNotification = async () => {
-  // GetNotifiedEmail.value = !GetNotifiedEmail.value
-  // await axios.put(
-  //   `${url}/user/updateProfile`,
-  //   {
-  //     notificationByEmail: GetNotifiedEmail.value
-  //   },
-  //   {
-  //     headers: {
-  //       Authorization: `Bearer ${localStorage.getItem("access_token")}`
-  //     }
-  //   }
-  // )
+    .then(() => {
+      profile.getProfile()
+    })
 }
 </script>
 
@@ -177,6 +185,7 @@ const checkEmailNotification = async () => {
             type="checkbox"
             value=""
             class="sr-only peer"
+            :checked="profile.notificationByLine"
             @click="checkLineNotification"
           />
           <div
@@ -192,6 +201,7 @@ const checkEmailNotification = async () => {
             type="checkbox"
             value=""
             class="sr-only peer"
+            :checked="profile.notificationByEmail"
             @click="checkEmailNotification"
           />
           <div
