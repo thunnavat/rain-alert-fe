@@ -1,81 +1,118 @@
+import { defineStore } from "pinia"
+import { jwtDecode } from "jwt-decode"
+import axios from "axios"
 
-    import { defineStore } from 'pinia'
-    import { jwtDecode } from "jwt-decode";
+const url = import.meta.env.PROD ? import.meta.env.VITE_API_URL : "/api"
 
-    export const userData = defineStore('data', {
-        state: () => ({
-               userId: '',
-               userName: '',
-               displayName: '',
-               picture: '',
-               role: '',
-               count: 0
-            }),
-        getters: {
-            getUserData() {
-                const token = localStorage.getItem('access_token');
-                if(token != null){
-                    const decode = jwtDecode(token)
-                    return decode
-                }
-                else {
-                    return 'Token not found'
-                }
-            },
-            getUserId() {
-                const token = localStorage.getItem("access_token");
-                if(token != null){
-                    const decode = jwtDecode(token)
-                    const userId = {
-                        userId: decode.userId,
-                        token: token
-                    }
-                    return userId
-                }
-                else {
-                    return 'UserId not found'
-                }
-            },
-            getLoginStatus() {
-                const token = localStorage.getItem("access_token");
-                if(token != null){
-                    this.count++
-                    return this.count
-                }else if(token == null){
-                    return 'Not Logged In'
-                }
-            }
-        },
-        actions: {
-            setUserData(userId, userName, displayName, picture, role) {
-                this.userId = userId
-                this.userName = userName
-                this.displayName = displayName
-                this.picture = picture
-                this.role = role
-            }
+export const userData = defineStore("data", {
+  state: () => ({
+    userId: "",
+    email: "",
+    displayName: "",
+    picture: "",
+    districtSubscribed: [],
+    notifyToken: "",
+    notificationByLine: false,
+    notificationByEmail: false,
+    role: "",
+    count: 0
+  }),
+  persist: true,
+  getters: {
+    getUserData() {
+      const token = localStorage.getItem("access_token")
+      if (token != null) {
+        const decode = jwtDecode(token)
+        return decode
+      } else {
+        return "Token not found"
+      }
+    },
+    getUserId() {
+      const token = localStorage.getItem("access_token")
+      if (token != null) {
+        const decode = jwtDecode(token)
+        const userId = {
+          userId: decode.userId,
+          token: token
         }
-    })
+        return userId
+      } else {
+        return "UserId not found"
+      }
+    },
+    getLoginStatus() {
+      const token = localStorage.getItem("access_token")
+      if (token != null) {
+        this.count++
+        return this.count
+      } else if (token == null) {
+        return "Not Logged In"
+      }
+    }
+  },
+  actions: {
+    setUserData(
+      userId,
+      email,
+      displayName,
+      picture,
+      districtSubscribed,
+      notifyToken,
+      notificationByLine,
+      notificationByEmail,
+      role
+    ) {
+      this.userId = userId
+      this.email = email
+      this.displayName = displayName
+      this.picture = picture
+      this.districtSubscribed = districtSubscribed
+      this.notifyToken = notifyToken
+      this.notificationByLine = notificationByLine
+      this.notificationByEmail = notificationByEmail
+      this.role = role
+    },
+    async getProfile() {
+        const token = localStorage.getItem("access_token")
+        const response = await axios.get(
+            `${url}/login/profile`,
+            {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+            }
+        )
+        const data = response.data
+        this.email = data.email
+        this.displayName = data.displayName
+        this.picture = data.picture
+        this.districtSubscribed = data.districtSubscribed
+        this.notifyToken = data.notifyToken
+        this.notificationByLine = data.notificationByLine
+        this.notificationByEmail = data.notificationByEmail
+    }
+  }
+})
 
-    export const userSubscribe = defineStore('province', {
-        state: () => ({
-            provinces: []
-        }),
-        getters: {
-            getProvinces(state) {
-                return state
-            }
-        },
-        actions: {
-            setInitProvince(province){
-                this.provinces = province
-            },
-            setProvince(province) {
-                this.provinces.push(province)
-                
-            },
-            removeProvince(province) {
-                this.provinces = this.provinces.filter((p) => !p.includes(province))
-            }
-        }
-    })
+export const userSubscribe = defineStore("province", {
+  state: () => ({
+    provinces: []
+  }),
+  getters: {
+    getProvinces(state) {
+      return state
+    }
+  },
+  actions: {
+    setInitProvince(province) {
+      this.provinces = province
+    },
+    setProvince(province) {
+      this.provinces.push(province)
+    },
+    removeProvince(province) {
+      this.provinces = this.provinces.filter((p) => !p.includes(province))
+    }
+  }
+})

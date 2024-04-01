@@ -1,24 +1,29 @@
 <script setup>
-import TableComponent from "../components/TableComponent.vue"
 import { userSubscribe, userData } from "../store/userData"
 import BtnComponent from "../components/BtnComponent.vue"
 import NavComponent from "../components/NavComponent.vue"
 import { ref, onMounted } from "vue"
-import router from "../router"
 import { UserDataApi } from "../util/utils"
+import axios from "axios"
+import { useRoute } from "vue-router"
 
 localStorage.setItem("page", "Profile")
 
+const route = useRoute()
 const notifyText = ref("")
 const GetNotified = ref(false)
+const url = import.meta.env.PROD ? import.meta.env.VITE_API_URL : "/api"
 notifyText.value = "Need Line or Email Notification"
 const navNames = ["Preference", "Reset Password"]
 const navSelected = ref("")
 const storeProvince = userSubscribe()
-const user = userData()
+const profile = userData()
 onMounted(() => {
   navSelected.value = "Preference"
+  getInitialProps()
 })
+
+console.log(profile)
 
 let lineBtn = {
   btnName: "Get Line Notification",
@@ -52,6 +57,94 @@ function changeRoute(route) {
 const imageUrl = import.meta.env.PROD
   ? import.meta.env.VITE_IMAGE_PATH + "DefaultProfile.png"
   : "/DefaultProfile.png"
+
+const lineNotifyUrl =
+  "https://notify-bot.line.me/oauth/authorize?response_type=code&client_id=e48bP0urIm25wxyt3PtwM5&redirect_uri=https://capstone23.sit.kmutt.ac.th/tt3/profile&scope=notify&state=cp23tt3mtj"
+
+const getInitialProps = async () => {
+  const lineCode = route.query.code
+  try {
+    if (lineCode) {
+      const params = new URLSearchParams()
+      params.append("grant_type", "authorization_code")
+      params.append("code", lineCode)
+      params.append(
+        "redirect_uri",
+        "https://capstone23.sit.kmutt.ac.th/tt3/profile"
+      )
+      params.append("client_id", "e48bP0urIm25wxyt3PtwM5")
+      params.append(
+        "client_secret",
+        "8arayYmWrmewnhQykYRjt9i39Ml6RjsZbzaQvEWE4QZ"
+      )
+
+      const request = await axios.post(
+        "https://notify-bot.line.me/oauth/token",
+        params,
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          }
+        }
+      )
+      if (request.status == 200) {
+        const notifyToken = request.data.access_token
+        await axios.put(
+          `${url}/user/updateProfile`,
+          {
+            notifyToken: notifyToken
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("access_token")}`
+            }
+          }
+        ).then(() => {
+          alert("Line Notify has been successfully connected")
+          checkLineNotification()
+        })
+      }
+    }
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+const checkLineNotification = async () => {
+  if (GetNotified.value == false) {
+    if (profile.getUserData.notifyToken == null) {
+      alert("Please allow the permission of Line Notify first")
+      window.location.href = lineNotifyUrl
+    }
+    GetNotified.value = !GetNotified.value
+    await axios.put(
+      `${url}/user/updateProfile`,
+      {
+        notificationByLine: GetNotified.value
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`
+        }
+      }
+    )
+  }
+}
+
+const checkEmailNotification = async () => {
+  // GetNotifiedEmail.value = !GetNotifiedEmail.value
+  // await axios.put(
+  //   `${url}/user/updateProfile`,
+  //   {
+  //     notificationByEmail: GetNotifiedEmail.value
+  //   },
+  //   {
+  //     headers: {
+  //       Authorization: `Bearer ${localStorage.getItem("access_token")}`
+  //     }
+  //   }
+  // )
+}
 </script>
 
 <template>
@@ -64,8 +157,8 @@ const imageUrl = import.meta.env.PROD
         class="w-52"
       />
       <div class="userData">
-        Name: {{ user.getUserData.displayName }} <br />
-        Email: {{ user.getUserData.email }}
+        Name: {{ profile.displayName }} <br />
+        Email: {{ profile.email }}
       </div>
 
       <NavComponent
@@ -79,11 +172,36 @@ const imageUrl = import.meta.env.PROD
     </div>
     <div class="w-4/6 flex flex-col items-center text-lg">
       <div class="flex justify-evenly w-full">
-        <BtnComponent :btn-property="lineBtn" />
-        <span class="pt-3">
-          <input type="checkbox" id="emailNotify">
-          <label class="pl-3 select-none" for="emailNotify">Get Email Notification</label>
-        </span>
+        <label class="inline-flex items-center me-5 cursor-pointer">
+          <input
+            type="checkbox"
+            value=""
+            class="sr-only peer"
+            @click="checkLineNotification"
+          />
+          <div
+            class="relative w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"
+          ></div>
+          <span
+            class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300"
+            >Get Line Notification</span
+          >
+        </label>
+        <label class="inline-flex items-center me-5 cursor-pointer">
+          <input
+            type="checkbox"
+            value=""
+            class="sr-only peer"
+            @click="checkEmailNotification"
+          />
+          <div
+            class="relative w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-focus:ring-4 peer-focus:ring-yellow-300 dark:peer-focus:ring-yellow-800 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-yellow-400"
+          ></div>
+          <span
+            class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300"
+            >Get Email Notification</span
+          >
+        </label>
       </div>
       <div
         v-if="navSelected == 'Preference'"
@@ -101,7 +219,10 @@ const imageUrl = import.meta.env.PROD
             <div class="w-1/5">
               {{ province }}
             </div>
-            <input type="checkbox" v-if="GetNotified == true">
+            <input
+              type="checkbox"
+              v-if="GetNotified == true"
+            />
             <div>
               <span> {{ notifyText }} </span>
             </div>
@@ -147,7 +268,7 @@ const imageUrl = import.meta.env.PROD
           </div>
         </div>
         <div class="self-center">
-          <btn-component 
+          <btn-component
             class="hover:brightness-90"
             :btn-property="btnProperty"
           />

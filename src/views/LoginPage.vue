@@ -5,6 +5,7 @@ import uploadImg from "vue-image-crop-upload"
 import { useRoute } from "vue-router"
 import axios from "axios"
 import router from "../router"
+import { userData } from "../store/userData"
 
 localStorage.setItem("page", "Login")
 const Mode = ref("login")
@@ -16,7 +17,8 @@ const errorMsg = ref("")
 let imgData = ref("")
 let img = new Image()
 const rePassWord = ref("")
-var formData = new FormData();
+var formData = new FormData()
+const profile = userData()
 
 let btnProp = {
   btnName: "Login",
@@ -53,7 +55,7 @@ let lineBtn = {
 }
 
 const lineLoginUrl =
-"https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=2003424448&redirect_uri=https%3A%2F%2Fcapstone23.sit.kmutt.ac.th%2Ftt3%2Flogin&state=cp23tt3mtj&scope=profile%20openid%20email"
+  "https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=2003424448&redirect_uri=https%3A%2F%2Fcapstone23.sit.kmutt.ac.th%2Ftt3%2Flogin&state=cp23tt3mtj&scope=profile%20openid%20email"
 const url = import.meta.env.PROD ? import.meta.env.VITE_API_URL : "/api"
 const route = useRoute()
 const userInfo = ref()
@@ -69,8 +71,11 @@ const getInitialProps = async () => {
       const params = new URLSearchParams()
       params.append("grant_type", "authorization_code")
       params.append("code", lineCode)
-      params.append("redirect_uri", "https://capstone23.sit.kmutt.ac.th/tt3/login")
-            params.append("client_id", "2003424448")
+      params.append(
+        "redirect_uri",
+        "https://capstone23.sit.kmutt.ac.th/tt3/login"
+      )
+      params.append("client_id", "2003424448")
       params.append("client_secret", "6448af88b9fa3786a350bd4ee089c532")
 
       const request = await axios.post(
@@ -121,6 +126,7 @@ const getInitialProps = async () => {
             .then((res) => {
               localStorage.setItem("access_token", res.data.accessToken)
               localStorage.setItem("page", "Home")
+              profile.getProfile()
               router.push({ name: "Home" })
             })
         })
@@ -132,120 +138,118 @@ const getInitialProps = async () => {
 
 function isValidate() {
   const regExp = new RegExp(/^\S+@\S+\.\S+$/)
-  if(email.value.trim() == '') {
-    errorMsg.value = 'อีเมลไม่สามารถเว้นว่างได้'
+  if (email.value.trim() == "") {
+    errorMsg.value = "อีเมลไม่สามารถเว้นว่างได้"
     return false
-  }
-  else if(!regExp.test(email.value.trim())){
-      errorMsg.value = 'กรุณากรอกอีเมลที่ถูกต้อง'
-      return false
-  }  
-  else if(passWord.value == '' && (Mode.value == 'sign-up' || Mode.value == 'login')){
-    errorMsg.value = 'รหัสผ่านไม่สามารถเว้นว่างได้'
+  } else if (!regExp.test(email.value.trim())) {
+    errorMsg.value = "กรุณากรอกอีเมลที่ถูกต้อง"
     return false
-  }
-
-  else if(Mode.value == 'sign-up'){
-    if(passWord.value != rePassWord.value) {
-      errorMsg.value = 'รหัสผ่านไม่ตรงกัน'
+  } else if (
+    passWord.value == "" &&
+    (Mode.value == "sign-up" || Mode.value == "login")
+  ) {
+    errorMsg.value = "รหัสผ่านไม่สามารถเว้นว่างได้"
+    return false
+  } else if (Mode.value == "sign-up") {
+    if (passWord.value != rePassWord.value) {
+      errorMsg.value = "รหัสผ่านไม่ตรงกัน"
       return false
-    }
-    else if(displayName.value.trim() == '') {
-      errorMsg.value = 'กรุณาใส่ชื่อที่ต้องการเเสดง'
+    } else if (displayName.value.trim() == "") {
+      errorMsg.value = "กรุณาใส่ชื่อที่ต้องการเเสดง"
       return false
-    }
-    else {
+    } else {
       return true
     }
-  }
-
-  else {
+  } else {
     return true
   }
 }
 
 function login() {
-  if(isValidate() == true){
+  if (isValidate() == true) {
     axios
-    .post(`${url}/login`, {
-      email: email.value.trim(),
-      password: passWord.value,
-      registerType: "WEB"
-    }).catch(function(error) {
-      errorMsg.value = error.response.data.message
-    })
-    .then((res) => {
-      localStorage.setItem("access_token", res.data.accessToken)
-      router.push({ name: "Home" })
-    })
+      .post(`${url}/login`, {
+        email: email.value.trim(),
+        password: passWord.value,
+        registerType: "WEB"
+      })
+      .catch(function (error) {
+        errorMsg.value = error.response.data.message
+      })
+      .then((res) => {
+        localStorage.setItem("access_token", res.data.accessToken)
+        profile.getProfile()
+        router.push({ name: "Home" })
+      })
   }
 }
 
 function signUp() {
-  console.log(CropSuccess(imgData.value)),
-  console.log(isValidate())
+  console.log(CropSuccess(imgData.value)), console.log(isValidate())
   const headerConfig = {
     headers: {
-      'Content-Type': 'multipart/form-data'
+      "Content-Type": "multipart/form-data"
     }
   }
-  if(isValidate() == true) {
+  if (isValidate() == true) {
     axios
-    .post(`${url}/users/register`, 
-    {
-      email: email.value.trim(),
-      password: passWord.value,
-      displayName: displayName.value.trim(),
-      picture: CropSuccess(imgData.value),
-      registerType: "WEB",
-    },
-    headerConfig, )
-    .catch(function(error) {
+      .post(
+        `${url}/users/register`,
+        {
+          email: email.value.trim(),
+          password: passWord.value,
+          displayName: displayName.value.trim(),
+          picture: CropSuccess(imgData.value),
+          registerType: "WEB"
+        },
+        headerConfig
+      )
+      .catch(function (error) {
         console.log(error)
         errorMsg.value = error.response.data.message
-        return;
-    })
-    .then(() => {
-      if(errorMsg.value == ''){
-        axios
-        .post(`${url}/login`, {
-          email: email.value,
-          password: passWord.value,
-          registerType: "WEB"
-        })
-        .then((res) => {
-          localStorage.setItem("access_token", res.data.accessToken)
-          router.push({ name: "Home" })
-        })
-      }
-      
-    })
+        return
+      })
+      .then(() => {
+        if (errorMsg.value == "") {
+          axios
+            .post(`${url}/login`, {
+              email: email.value,
+              password: passWord.value,
+              registerType: "WEB"
+            })
+            .then((res) => {
+              localStorage.setItem("access_token", res.data.accessToken)
+              profile.getProfile()
+              router.push({ name: "Home" })
+            })
+        }
+      })
   }
-  
 }
 
 function resetPs() {
-  if(isValidate() == true){
-    axios.put(`${url}/login/forgot-password`, {
-    email: email.value
-    })
-    .catch(function(error) {
+  if (isValidate() == true) {
+    axios
+      .put(`${url}/login/forgot-password`, {
+        email: email.value
+      })
+      .catch(function (error) {
         errorMsg.value = error.response.data.message
-        return;
-    })
+        return
+      })
   }
-
 }
-
 
 function CropSuccess(cropData) {
   imgData.value = cropData
   img.src = cropData
-  const imgType = imgData.value.split(/:(.*?);/)[1];
-  const base64 = imgData.value.split('base64,')[1];
-  const fileSurname = imgType.split('/')[1];
-  const blob = new Blob([atob(base64)], { type: imgType });
-  const file = new File([blob], `profileImage.${fileSurname}`, { type: imgType });
+  const imgType = imgData.value.split(/:(.*?);/)[1]
+  const base64 = imgData.value.split("base64,")[1]
+  const fileSurname = imgType.split("/")[1]
+  const blob = new Blob([atob(base64)], { type: imgType })
+  const file = new File([blob], `profileImage.${fileSurname}`, {
+    type: imgType
+  })
   console.log(file)
   console.log(imgData.value)
   return file
@@ -310,13 +314,13 @@ function CropSuccess(cropData) {
         />
         <span
           class="btn altFont pl-7 pt-2"
-          @click="Mode = 'sign-up', errorMsg = ''"
+          @click="(Mode = 'sign-up'), (errorMsg = '')"
           >Need to sign up</span
         >
       </div>
       <p
         class="btn altFont text-center text-[#FF0000]"
-        @click="Mode = 'fgPass' , errorMsg = ''"
+        @click="(Mode = 'fgPass'), (errorMsg = '')"
       >
         Forgotten password?
       </p>
@@ -409,7 +413,7 @@ function CropSuccess(cropData) {
         />
         <span
           class="btn altFont pl-7 pt-2"
-          @click="Mode = 'login' , errorMsg = ''"
+          @click="(Mode = 'login'), (errorMsg = '')"
           >I already have account</span
         >
       </div>
@@ -448,7 +452,7 @@ function CropSuccess(cropData) {
         <BtnComponent
           :btn-property="cancelBtn"
           class="btn pr-20"
-          @click="Mode = 'login' , errorMsg = ''"
+          @click="(Mode = 'login'), (errorMsg = '')"
         />
         <BtnComponent
           :btn-property="resetBtn"
