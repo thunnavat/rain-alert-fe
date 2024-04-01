@@ -227,7 +227,7 @@ function signUp() {
 function resetPs() {
   if (isValidate() == true) {
     axios
-      .put(`${url}/login/forgot-password`, {
+      .post(`${url}/login/forgot-password`, {
         email: email.value
       })
       .catch(function (error) {
@@ -396,7 +396,7 @@ function dataURLtoFile(dataurl, filename) {
           <img
             v-show="imgData != ''"
             class="hover:cursor-pointer bg-slate-900"
-            style="clip-path: circle()"
+            style="clip-path: circle(); width: 10em;"
             :src="imgData"
             alt="NO IMAGE CHOSEN"
             @click="isUpload = true"
@@ -406,6 +406,8 @@ function dataURLtoFile(dataurl, filename) {
             lang-type="en"
             :no-square="true"
             :img-format="'jpg'"
+            :width="'500'"
+            :height="'500'"
             @crop-success="CropSuccess"
           ></uploadImg>
         </div>

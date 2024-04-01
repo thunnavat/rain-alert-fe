@@ -15,5 +15,12 @@ export const UserDataApi = {
         {
             headers: {'Authorization': `Bearer ${localStorage.getItem("access_token")}`}
         })
-    }
+    },
+
+    resetPassword: (resetLink, newPass) => {
+        axios.put(`${url}/login/reset-password`, {
+            resetLink: resetLink,
+            newPass: newPass
+          })
+    },
 }

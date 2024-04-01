@@ -6,6 +6,7 @@ import { ref, onMounted } from "vue"
 import { UserDataApi } from "../util/utils"
 import axios from "axios"
 import { jwtDecode } from "jwt-decode"
+import uploadImg from "vue-image-crop-upload"
 
 localStorage.setItem("page", "Profile")
 
@@ -17,6 +18,7 @@ const navNames = ["Preference", "Change Password"]
 const navSelected = ref("")
 const profile = userData()
 const imageUrl = ref()
+const isUpload = ref(false)
 onMounted(() => {
   navSelected.value = "Preference"
   profile.getProfile()
@@ -94,17 +96,62 @@ const checkEmailNotification = async () => {
       profile.getProfile()
     })
 }
+
+function CropSuccess(imgData) {
+  const headerConfig = {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+      "Content-Type": "multipart/form-data"
+    }
+  }
+  axios.put(`${url}/users/updateProfile`,{
+    picture: dataURLtoFile(imgData, 'profile.jpg')
+  },
+  headerConfig
+  ).then(() => {
+    window.location.reload()
+  })
+}
+
+function dataURLtoFile(dataurl, filename) {
+    var arr = dataurl.split(","),
+      mime = arr[0].match(/:(.*?);/)[1],
+      bstr = atob(arr[arr.length - 1]),
+      n = bstr.length,
+      u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
+  }
 </script>
 
 <template>
   <div class="flex">
     <div class="w-2/6 min-w-fit flex flex-col items-center">
-      <img
-        :src="imageUrl"
-        alt=""
-        style="border-radius: 50%"
-        class="w-52"
-      />
+      <div class="container">
+        <img
+          :src="imageUrl"
+          alt=""
+          style="border-radius: 50% "
+          class="w-52 image"
+        />
+        <uploadImg
+            v-model="isUpload"
+            lang-type="en"
+            :no-square="true"
+            :img-format="'jpg'"
+            :width="'500'"
+            :height="'500'"
+            @crop-success="CropSuccess"
+          ></uploadImg>
+      <div class="middle">
+        <btn-component
+        :btn-property="{btnName: 'Change IMAGE'}"
+        @click="isUpload = true"
+        />
+      </div>
+      </div>
       <div class="userData">
         Name: {{ profile.displayName }} <br />
         Email: {{ profile.email }}
@@ -268,5 +315,44 @@ input:-webkit-autofill:active {
   -webkit-text-fill-color: #ffffff;
   transition: background-color 5000s ease-in-out 0s;
   box-shadow: inset 0 0 20px 20px #23232329;
+}
+.container {
+  position: relative;
+  width: 50%;
+}
+
+.image {
+  opacity: 1;
+  display: block;
+  width: 100%;
+  height: auto;
+  transition: .5s ease;
+  backface-visibility: hidden;
+}
+
+.middle {
+  transition: .5s ease;
+  opacity: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  -ms-transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.container:hover .image {
+  opacity: 0.3;
+}
+
+.container:hover .middle {
+  opacity: 1;
+}
+
+.text {
+  background-color: #04AA6D;
+  color: white;
+  font-size: 16px;
+  padding: 16px 32px;
 }
 </style>
