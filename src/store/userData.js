@@ -15,7 +15,7 @@ export const userData = defineStore("data", {
     notificationByLine: false,
     notificationByEmail: false,
     role: "",
-    count: 0
+    loginStatus: false,
   }),
   persist: true,
   getters: {
@@ -44,10 +44,9 @@ export const userData = defineStore("data", {
     getLoginStatus() {
       const token = localStorage.getItem("access_token")
       if (token != null) {
-        this.count++
-        return this.count
+        this.loginStatus = true
       } else if (token == null) {
-        return "Not Logged In"
+        this.loginStatus = false
       }
     }
   },

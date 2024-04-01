@@ -17,8 +17,8 @@ const user = userData()
 const storeProvince = userSubscribe()
 
 onMounted(() => {
-  if((localStorage.getItem('access_token') != null && user.getLoginStatus != 1) 
-    || (localStorage.getItem('access_token') == null && user.getLoginStatus == 1)){
+  if((localStorage.getItem('access_token') != null && user.loginStatus != true) 
+    || (localStorage.getItem('access_token') == null && user.loginStatus != false)){
     window.location.reload()
   }
   
