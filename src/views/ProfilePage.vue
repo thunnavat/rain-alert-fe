@@ -19,11 +19,10 @@ const profile = userData()
 const imageUrl = ref()
 onMounted(() => {
   navSelected.value = "Preference"
-  getInitialProps()
+  profile.getProfile()
   imageUrl.value = profile.picture == null ?
   import.meta.env.PROD ?  import.meta.env.VITE_IMAGE_PATH + 'DefaultProfile.png' : '/DefaultProfile.png':
   profile.picture
-  profile.getProfile()
 })
 
 let btnProperty = {
