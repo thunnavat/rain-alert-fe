@@ -286,7 +286,7 @@ const zoomBtn = {
     v-if="isLoggedIn == true"
     class="bg-[#171717]"
   >
-    <BtnComponent
+    <btn-component
       :btn-property="zoomBtn"
       @click="isZoom = !isZoom"
     />

@@ -6,6 +6,8 @@ import { useRoute } from "vue-router"
 import axios from "axios"
 import router from "../router"
 import { userData } from "../store/userData"
+import AlertComponent from "../components/AlertComponent.vue"
+import LoadingComponent from "../components/LoadingComponent.vue"
 
 localStorage.setItem("page", "Login")
 const Mode = ref("login")
@@ -13,11 +15,12 @@ const email = ref("")
 const passWord = ref("")
 const isUpload = ref(false)
 const displayName = ref("")
-const errorMsg = ref("")
 let imgData = ref("")
 const rePassWord = ref("")
 const profile = userData()
-
+const alertMsg = ref('')
+const alertType = ref('')
+const loading = ref(false)
 let btnProp = {
   btnName: "Login",
   width: "12em"
@@ -137,23 +140,23 @@ const getInitialProps = async () => {
 function isValidate() {
   const regExp = new RegExp(/^\S+@\S+\.\S+$/)
   if (email.value.trim() == "") {
-    errorMsg.value = "อีเมลไม่สามารถเว้นว่างได้"
+    alertMsg.value = "อีเมลไม่สามารถเว้นว่างได้"
     return false
   } else if (!regExp.test(email.value.trim())) {
-    errorMsg.value = "กรุณากรอกอีเมลที่ถูกต้อง"
+    alertMsg.value = "กรุณากรอกอีเมลที่ถูกต้อง"
     return false
   } else if (
     passWord.value == "" &&
     (Mode.value == "sign-up" || Mode.value == "login")
   ) {
-    errorMsg.value = "รหัสผ่านไม่สามารถเว้นว่างได้"
+    alertMsg.value = "รหัสผ่านไม่สามารถเว้นว่างได้"
     return false
   } else if (Mode.value == "sign-up") {
     if (passWord.value != rePassWord.value) {
-      errorMsg.value = "รหัสผ่านไม่ตรงกัน"
+      alertMsg.value = "รหัสผ่านไม่ตรงกัน"
       return false
     } else if (displayName.value.trim() == "") {
-      errorMsg.value = "กรุณาใส่ชื่อที่ต้องการเเสดง"
+      alertMsg.value = "กรุณาใส่ชื่อที่ต้องการเเสดง"
       return false
     } else {
       return true
@@ -172,7 +175,7 @@ function login() {
         registerType: "WEB"
       })
       .catch(function (error) {
-        errorMsg.value = error.response.data.message
+        alertMsg.value = error.response.data.message
       })
       .then(async(res) => {
         localStorage.setItem("access_token", res.data.accessToken)
@@ -202,12 +205,11 @@ function signUp() {
         headerConfig
       )
       .catch(function (error) {
-        console.log(error)
-        errorMsg.value = error.response.data.message
+        alertMsg.value = error.response.data.message
         return
       })
       .then(() => {
-        if (errorMsg.value == "") {
+        if (alertMsg.value == "") {
           axios
             .post(`${url}/login`, {
               email: email.value,
@@ -226,13 +228,22 @@ function signUp() {
 
 function resetPs() {
   if (isValidate() == true) {
+    loading.value = true
     axios
       .post(`${url}/login/forgot-password`, {
         email: email.value
       })
       .catch(function (error) {
-        errorMsg.value = error.response.data.message
-        return
+        loading.value = false
+        alertMsg.value = error.response.data.message
+        alertType.value = 'ERROR'
+      })
+      .then(() => {
+        if(alertMsg.value == ''){
+          loading.value = false
+          alertMsg.value = 'ส่งอีเมล์ไปยังบัญชีของคุณเเล้ว'
+          alertType.value = 'SUCCESS'
+        }
       })
   }
 }
@@ -279,16 +290,10 @@ function dataURLtoFile(dataurl, filename) {
     >
       <div class="btn h-auto max-w-full">
         <a :href="lineLoginUrl">
-          <BtnComponent :btn-property="lineBtn" />
+          <btn-component :btn-property="lineBtn" />
         </a>
       </div>
-      <div
-        v-show="errorMsg != ''"
-        class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 my-3 rounded relative"
-        role="alert"
-      >
-        <span class="block sm:inline">{{ errorMsg }}</span>
-      </div>
+      <alert-component :alert-msg="alertMsg"/>
 
       <div class="formText pt-6">
         Email <br />
@@ -297,7 +302,7 @@ function dataURLtoFile(dataurl, filename) {
           type="text"
           required
           class="textInput"
-          @click="errorMsg = ''"
+          @keypress="alertMsg = ''"
         />
       </div>
       <div class="formText pt-10">
@@ -307,24 +312,24 @@ function dataURLtoFile(dataurl, filename) {
           type="password"
           required
           class="textInput"
-          @click="errorMsg = ''"
+          @keypress="alertMsg = ''"
         />
       </div>
       <div class="pt-10 flex">
-        <BtnComponent
+        <btn-component
           :btn-property="btnProp"
           class="btn"
           @click="login()"
         />
         <span
           class="btn altFont pl-7 pt-2"
-          @click="(Mode = 'sign-up'), (errorMsg = '')"
+          @click="(Mode = 'sign-up'), (alertMsg = '')"
           >Need to sign up</span
         >
       </div>
       <p
         class="btn altFont text-center text-[#FF0000]"
-        @click="(Mode = 'fgPass'), (errorMsg = '')"
+        @click="(Mode = 'fgPass'), (alertMsg = '')"
       >
         Forgotten password?
       </p>
@@ -342,13 +347,7 @@ function dataURLtoFile(dataurl, filename) {
       />
     </div>
     <div class="info altFont w-4/6">
-      <div
-        v-show="errorMsg != ''"
-        class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 my-3 rounded relative"
-        role="alert"
-      >
-        <span class="block sm:inline">{{ errorMsg }}</span>
-      </div>
+      <alert-component :alert-msg="alertMsg"/>
       <div class="formText pt-4">
         Email <br />
         <input
@@ -356,7 +355,7 @@ function dataURLtoFile(dataurl, filename) {
           type="text"
           required
           class="textInput"
-          @click="errorMsg = ''"
+          @keypress="alertMsg = ''"
         />
       </div>
       <div class="formText pt-4">
@@ -366,7 +365,7 @@ function dataURLtoFile(dataurl, filename) {
           type="password"
           required
           class="textInput"
-          @click="errorMsg = ''"
+          @keypress="alertMsg = ''"
         />
       </div>
       <div class="formText pt-4">
@@ -376,7 +375,7 @@ function dataURLtoFile(dataurl, filename) {
           type="password"
           required
           class="textInput"
-          @click="errorMsg = ''"
+          @keypress="alertMsg = ''"
         />
       </div>
       <div class="formText pt-4">
@@ -386,7 +385,7 @@ function dataURLtoFile(dataurl, filename) {
           type="text"
           required
           class="textInput"
-          @click="errorMsg = ''"
+          @keypress="alertMsg = ''"
         />
       </div>
       <div class="formText pt-6 pb-6">
@@ -413,14 +412,14 @@ function dataURLtoFile(dataurl, filename) {
         </div>
       </div>
       <div class="py-8 flex">
-        <BtnComponent
+        <btn-component
           :btn-property="signUpBtn"
           class="btn"
           @click="signUp()"
         />
         <span
           class="btn altFont pl-7 pt-2"
-          @click="(Mode = 'login'), (errorMsg = '')"
+          @click="(Mode = 'login'), (alertMsg = '')"
           >I already have account</span
         >
       </div>
@@ -438,13 +437,8 @@ function dataURLtoFile(dataurl, filename) {
       />
     </div>
     <div class="info altFont w-4/6 self-center">
-      <div
-        v-show="errorMsg != ''"
-        class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 my-3 rounded relative"
-        role="alert"
-      >
-        <span class="block sm:inline">{{ errorMsg }}</span>
-      </div>
+      <loading-component class="h-0" v-show="loading"/>
+      <alert-component :alert-msg="alertMsg" :alert-type="alertType" />
       <div class="formText">
         Email <br />
         <input
@@ -452,16 +446,16 @@ function dataURLtoFile(dataurl, filename) {
           type="text"
           required
           class="textInput"
-          @click="errorMsg = ''"
+          @keypress="alertMsg = ''"
         />
       </div>
       <div class="pt-28 flex">
-        <BtnComponent
+        <btn-component
           :btn-property="cancelBtn"
           class="btn pr-20"
-          @click="(Mode = 'login'), (errorMsg = '')"
+          @click="(Mode = 'login'), (alertMsg = '')"
         />
-        <BtnComponent
+        <btn-component
           :btn-property="resetBtn"
           class="btn"
           @click="resetPs()"

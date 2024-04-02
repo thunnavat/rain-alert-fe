@@ -9,9 +9,9 @@
 </template>
 <style scoped>
     .loader {
-  border: 16px solid #232323;
+  border: 10px solid #232323;
   border-radius: 50%;
-  border-top: 16px solid #3498db;
+  border-top: 11px solid #3498db;
   width: 120px;
   height: 120px;
   -webkit-animation: spin 2s linear infinite; /* Safari */

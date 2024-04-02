@@ -51,8 +51,6 @@ function navigateToHome() {
 
 function navigateToProfile() {
   router.push({ name: "Profile" })
-  // localStorage.removeItem("access_token")
-  // window.location.reload()
 }
 </script>
 
@@ -72,14 +70,14 @@ function navigateToProfile() {
         @click="navSelected = ''"
       />
     
-        <BtnComponent
+        <btn-component
         v-if="profile.getUserData == 'Token not found'"
         class="loginBtn bg-[#171717]"
         :btn-property="btnProp"
         @click="login()"
         />
   
-        <BtnComponent
+        <btn-component
         v-else-if="profile.getUserData != 'Token not found'"
         class="loginBtn"
         :btn-property="ProfileIcon"

@@ -2,21 +2,48 @@
 import { useRoute } from 'vue-router';
 import { ref } from 'vue';
 import BtnComponent from "../components/BtnComponent.vue"
-import { UserDataApi } from "../util/utils"
+import AlertComponent from '../components/AlertComponent.vue';
+import router from "../router"
 const route = useRoute()
-const passWord = ref()
-const rePassWord = ref()
+const passWord = ref('')
+const rePassWord = ref('')
+import axios from "axios"
+
+const url = import.meta.env.PROD ? import.meta.env.VITE_API_URL : "/api"
+const alertMsg = ref("")
+
 let btnProperty = {
   btnName: "Confirm",
   bgColor: "#13161B",
   height: "5rem",
   width: "14rem"
 }
-console.log(route.params.id)
 function resetPs() {
-    if(passWord.value == rePassWord.value){
-        UserDataApi.resetPassword(route.params.id, passWord.value)
+  if(rePassWord.value != '' && passWord.value == ''){
+    alertMsg.value = "โปรดกรอกข้อมูลให้ครบ"
+  }
+  else if(passWord.value != rePassWord.value){
+    alertMsg.value = "รหัสผ่านไม่ตรงกัน"
+  }
+  else if(passWord.value == ''){
+    alertMsg.value = "password ไม่สามารถเว้นว่างได้"
+  }
+  else if(passWord.value == rePassWord.value){
+        axios.put(`${url}/login/reset-password`, {
+            resetLink: route.params.id,
+            newPass: passWord.value
+        })
+        .catch(function (error) {
+          alertMsg.value = error.response.data.message
+        })
+        .then(() => {
+          if(alertMsg.value == ""){
+            alert('Your Password Has Been Reset')
+            router.push({ name : "Home"})
+            }
+        })
     }
+
 }
 </script>
 
@@ -25,6 +52,7 @@ function resetPs() {
         class="w-full flex justify-evenly bg-[#191d23] mt-16 rounded-lg"
       >
       <div class="w-1/2">
+        <alert-component :alert-msg="alertMsg"/>
             <h1>Reset Password</h1>
           <div class="formText">
             New Password <br />
@@ -33,6 +61,7 @@ function resetPs() {
               type="password"
               required
               class="textInput"
+              @click="alertMsg = ''"
             />
           </div>
           <div class="formText pt-6 py-11">
@@ -42,6 +71,7 @@ function resetPs() {
               type="password"
               required
               class="textInput"
+              @click="alertMsg = ''"
             />
           </div>
         </div>
@@ -52,7 +82,7 @@ function resetPs() {
             @click="resetPs()"
           />
         </div>
-    </div>
+        </div>
 </template>
 <style scoped>
 .textInput {

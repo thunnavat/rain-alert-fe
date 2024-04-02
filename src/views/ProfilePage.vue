@@ -7,6 +7,7 @@ import { UserDataApi } from "../util/utils"
 import axios from "axios"
 import { jwtDecode } from "jwt-decode"
 import uploadImg from "vue-image-crop-upload"
+import AlertComponent from "../components/AlertComponent.vue"
 
 localStorage.setItem("page", "Profile")
 
@@ -19,6 +20,12 @@ const navSelected = ref("")
 const profile = userData()
 const imageUrl = ref()
 const isUpload = ref(false)
+const oldPass = ref('')
+const newPass = ref('')
+const reNewPass = ref('')
+const alertMsg = ref('')
+const alertType = ref('ERROR')
+
 onMounted(() => {
   navSelected.value = "Preference"
   profile.getProfile()
@@ -124,6 +131,50 @@ function dataURLtoFile(dataurl, filename) {
     }
     return new File([u8arr], filename, { type: mime });
   }
+
+function changePassword() {
+  if(oldPass.value == '' || newPass.value == '' || reNewPass.value == ''){
+    alertMsg.value = 'โปรดกรอกข้อมูลให้ครบ'
+    alertType.value = 'ERROR'
+  } 
+  else if(newPass.value != reNewPass.value){
+    alertMsg.value = 'รหัสผ่านไม่ตรงกัน'
+    alertType.value = 'ERROR'
+  }
+  else if(oldPass.value == newPass.value){
+    alertMsg.value = 'รหัสผ่านไม่สามารถเป็นรหัสเดิมได้'
+    alertType.value = 'ERROR'
+  }
+  else if(newPass.value != '' && newPass.value == reNewPass.value){
+    axios
+    .put(
+      `${url}/users/changePassword`,
+      {
+        userId: profile.userId,
+        currentPassword: oldPass.value,
+        newPassword: newPass.value,
+        retypePassword: reNewPass.value
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`
+        }
+      }
+    ).catch(function (error) {
+        alertMsg.value = error.response.data.message
+      })
+      .then(() => {
+        if(alertMsg.value == ''){
+          alertType.value = 'SUCCESS'
+          alertMsg.value = 'เปลี่ยนรหัสผ่านเรียบร้อยเเล้ว'
+          oldPass.value = ''
+          newPass.value = ''
+          reNewPass.value = ''
+        }
+      })
+
+  }
+}
 </script>
 
 <template>
@@ -134,7 +185,7 @@ function dataURLtoFile(dataurl, filename) {
           :src="imageUrl"
           alt=""
           style="border-radius: 50% "
-          class="w-52 image"
+          class="image w-auto"
         />
         <uploadImg
             v-model="isUpload"
@@ -240,32 +291,39 @@ function dataURLtoFile(dataurl, filename) {
         v-else-if="navSelected == 'Change Password'"
         class="w-full flex justify-evenly bg-[#191d23] mt-16 rounded-lg"
       >
-        <div class="w-1/2">
+      <div class="w-1/2">
+          <alert-component
+          :alert-msg= alertMsg
+          :alert-type="alertType"
+          />
           <div class="formText pt-11">
             Old Password <br />
             <input
-              v-model="passWord"
+              v-model="oldPass"
               type="password"
               required
               class="textInput"
+              @keypress="alertMsg = ''"
             />
           </div>
           <div class="formText pt-6">
             New Password <br />
             <input
-              v-model="passWord"
+              v-model="newPass"
               type="password"
               required
               class="textInput"
+              @keypress="alertMsg = ''"
             />
           </div>
           <div class="formText pt-6 pb-11">
             Re-type new Password <br />
             <input
-              v-model="passWord"
+              v-model="reNewPass"
               type="password"
               required
               class="textInput"
+              @keypress="alertMsg = ''"
             />
           </div>
         </div>
@@ -273,6 +331,7 @@ function dataURLtoFile(dataurl, filename) {
           <btn-component
             class="hover:brightness-90"
             :btn-property="btnProperty"
+            @click="changePassword()"
           />
         </div>
       </div>
