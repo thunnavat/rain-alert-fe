@@ -31,6 +31,7 @@ function imageUrl(){
   display: flex;
   align-items: center;
   white-space: pre-line;
+  color: white;
   background-color: #484848;
 }
 
