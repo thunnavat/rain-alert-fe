@@ -18,9 +18,15 @@ const displayName = ref("")
 let imgData = ref("")
 const rePassWord = ref("")
 const profile = userData()
-const alertMsg = ref('')
-const alertType = ref('')
+const alertMsg = ref("")
+const alertType = ref("ERROR")
 const loading = ref(false)
+const isModalVisible = ref(false)
+const mergeMessage = ref("")
+const districtSubscribe = ref([])
+const isMergeModal = ref(false)
+const selectedDistrict = ref([])
+const otp = ref()
 let btnProp = {
   btnName: "Login",
   width: "12em"
@@ -53,6 +59,10 @@ let lineBtn = {
   bgColor: "#06C755",
   width: "24rem",
   height: "3.5rem"
+}
+
+const otpBtn = {
+  btnName: "GET OTP"
 }
 
 const lineLoginUrl =
@@ -138,32 +148,59 @@ const getInitialProps = async () => {
 }
 
 function isValidate() {
-  const regExp = new RegExp(/^\S+@\S+\.\S+$/)
+  alertType.value = 'ERROR'
+  const regExp = new RegExp(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
+  const passwordRegExp = new RegExp(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/)
   if (email.value.trim() == "") {
     alertMsg.value = "อีเมลไม่สามารถเว้นว่างได้"
     return false
   } else if (!regExp.test(email.value.trim())) {
     alertMsg.value = "กรุณากรอกอีเมลที่ถูกต้อง"
     return false
-  } else if (
+  }
+  else if (
     passWord.value == "" &&
     (Mode.value == "sign-up" || Mode.value == "login")
   ) {
     alertMsg.value = "รหัสผ่านไม่สามารถเว้นว่างได้"
     return false
   } else if (Mode.value == "sign-up") {
+    if(!passwordRegExp.test(passWord.value)) {
+      alertMsg.value = "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร ประกอบด้วยตัวเลข ตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และอักขระพิเศษ"
+      return false
+    }
     if (passWord.value != rePassWord.value) {
       alertMsg.value = "รหัสผ่านไม่ตรงกัน"
       return false
     } else if (displayName.value.trim() == "") {
       alertMsg.value = "กรุณาใส่ชื่อที่ต้องการเเสดง"
       return false
-    } else {
+    } else if(otp.value == '') {
+      alertMsg.value = "กรุณากรอกรหัส OTP"
+      return false
+    } else if(otp.value.length != 6) {
+      alertMsg.value = "รหัส OTP ไม่ถูกต้อง"
+      return false
+    }
+     else {
       return true
     }
   } else {
     return true
   }
+}
+
+function emailValidate() {
+  alertType.value = 'ERROR'
+  const regExp = new RegExp(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
+  if (email.value.trim() == "") {
+    alertMsg.value = "อีเมลไม่สามารถเว้นว่างได้"
+    return false
+  } else if (!regExp.test(email.value.trim())) {
+    alertMsg.value = "กรุณากรอกอีเมลที่ถูกต้อง"
+    return false
+  }
+  return true
 }
 
 function login() {
@@ -199,7 +236,8 @@ function signUp() {
           email: email.value.trim(),
           password: passWord.value,
           displayName: displayName.value.trim(),
-          picture: imgData.value != '' ? UploadPicture(imgData.value) : '',
+          picture: imgData.value != "" ? UploadPicture(imgData.value) : "",
+          otp: otp.value,
           registerType: "WEB"
         },
         headerConfig
@@ -223,6 +261,29 @@ function signUp() {
             })
         }
       })
+  }
+}
+
+
+function getOtp() {
+  alertMsg.value = ''
+  if (emailValidate() == true) {
+    loading.value = true
+    axios.post(`${url}/login/request-email-verification`, {
+      email: email.value
+    })
+    .catch(function (error) {
+        alertMsg.value = error.response.data.message
+        loading.value = false
+        return
+      })
+    .then(() => {
+      if(alertMsg.value == "") {
+        alertMsg.value = 'ส่งรหัส OTP ไปยัง Email ของคุณเเล้ว'
+        alertType.value = 'SUCCESS'
+        loading.value = false
+      }
+    })
   }
 }
 
@@ -293,8 +354,7 @@ function dataURLtoFile(dataurl, filename) {
           <btn-component :btn-property="lineBtn" />
         </a>
       </div>
-      <alert-component :alert-msg="alertMsg"/>
-
+      <alert-component :alert-msg="alertMsg" />
       <div class="formText pt-6">
         Email <br />
         <input
@@ -323,13 +383,13 @@ function dataURLtoFile(dataurl, filename) {
         />
         <span
           class="btn altFont pl-7 pt-2"
-          @click="(Mode = 'sign-up'), (alertMsg = '')"
+          @click=";(Mode = 'sign-up'), (alertMsg = '')"
           >Need to sign up</span
         >
       </div>
       <p
         class="btn altFont text-center text-[#FF0000]"
-        @click="(Mode = 'fgPass'), (alertMsg = '')"
+        @click=";(Mode = 'fgPass'), (alertMsg = '')"
       >
         Forgotten password?
       </p>
@@ -347,7 +407,7 @@ function dataURLtoFile(dataurl, filename) {
       />
     </div>
     <div class="info altFont w-4/6">
-      <alert-component :alert-msg="alertMsg"/>
+      <alert-component :alert-msg="alertMsg" :alert-type="alertType" />
       <div class="formText pt-4">
         Email <br />
         <input
@@ -356,8 +416,26 @@ function dataURLtoFile(dataurl, filename) {
           required
           class="textInput"
           @keypress="alertMsg = ''"
+          placeholder="Enter Your Email Address"
         />
       </div>
+      <div class="flex pt-5">
+        <btn-component
+        v-if="loading == false"
+        :btn-property="otpBtn"
+        @click="getOtp()"
+        />
+        <loading-component :size="'12px'" v-else-if="loading == true"/>
+        <input
+          type="text"
+          maxlength="6"
+          class="textInput pt-4"
+          pattern="\d*"
+          v-model="otp"
+          placeholder="OTP Verification Code"
+        />
+      </div>
+
       <div class="formText pt-4">
         Password <br />
         <input
@@ -366,7 +444,15 @@ function dataURLtoFile(dataurl, filename) {
           required
           class="textInput"
           @keypress="alertMsg = ''"
+          placeholder="Enter Your Password"
         />
+        <ul class="text-sm">
+          <li :class="passWord.length >= 8 ? 'text-green-600' : ''">อย่างน้อย 8 ตัวอักษร</li>
+          <li :class="/\d/.test(passWord) ? 'text-green-600' : ''">ตัวเลข</li>
+          <li :class="/[A-Z]/.test(passWord) ? 'text-green-600' : ''">ตัวพิมพ์ใหญ่</li>
+          <li :class="/[a-z]/.test(passWord) ? 'text-green-600' : ''">ตัวพิมพ์เล็ก</li>
+          <li :class="/(?=.*[\W_])/.test(passWord) ? 'text-green-600' : ''">อักขระพิเศษ</li>
+        </ul>
       </div>
       <div class="formText pt-4">
         Re-type password <br />
@@ -376,6 +462,7 @@ function dataURLtoFile(dataurl, filename) {
           required
           class="textInput"
           @keypress="alertMsg = ''"
+          placeholder="Re-Enter Your Password"
         />
       </div>
       <div class="formText pt-4">
@@ -386,16 +473,17 @@ function dataURLtoFile(dataurl, filename) {
           required
           class="textInput"
           @keypress="alertMsg = ''"
+          placeholder="Enter Your Display Name"
         />
       </div>
       <div class="formText pt-6 pb-6">
-        Choose Your Profile Picture<br />
+        Choose Your Profile Picture (Optional)<br />
         <button @click="isUpload = true">upload image</button>
         <div class="pt-3">
           <img
             v-show="imgData != ''"
             class="hover:cursor-pointer bg-slate-900"
-            style="clip-path: circle(); width: 10em;"
+            style="clip-path: circle(); width: 10em"
             :src="imgData"
             alt="NO IMAGE CHOSEN"
             @click="isUpload = true"
@@ -405,8 +493,8 @@ function dataURLtoFile(dataurl, filename) {
             lang-type="en"
             :no-square="true"
             :img-format="'jpg'"
-            :width="'500'"
-            :height="'500'"
+            :width="500"
+            :height="500"
             @crop-success="CropSuccess"
           ></uploadImg>
         </div>
@@ -419,7 +507,7 @@ function dataURLtoFile(dataurl, filename) {
         />
         <span
           class="btn altFont pl-7 pt-2"
-          @click="(Mode = 'login'), (alertMsg = '')"
+          @click=";(Mode = 'login'), (alertMsg = '')"
           >I already have account</span
         >
       </div>
@@ -437,8 +525,14 @@ function dataURLtoFile(dataurl, filename) {
       />
     </div>
     <div class="info altFont w-4/6 self-center">
-      <loading-component class="h-0" v-show="loading"/>
-      <alert-component :alert-msg="alertMsg" :alert-type="alertType" />
+      <loading-component
+        class="h-0"
+        v-show="loading"
+      />
+      <alert-component
+        :alert-msg="alertMsg"
+        :alert-type="alertType"
+      />
       <div class="formText">
         Email <br />
         <input
@@ -453,7 +547,7 @@ function dataURLtoFile(dataurl, filename) {
         <btn-component
           :btn-property="cancelBtn"
           class="btn pr-20"
-          @click="(Mode = 'login'), (alertMsg = '')"
+          @click=";(Mode = 'login'), (alertMsg = '')"
         />
         <btn-component
           :btn-property="resetBtn"
@@ -462,7 +556,73 @@ function dataURLtoFile(dataurl, filename) {
         />
       </div>
     </div>
-  </div>
+    <transition name="fade">
+      <div v-if="isModalVisible">
+        <div class="absolute bg-black bg-opacity-70 inset-0 z-0">
+          <div
+            class="w-full max-w-lg p-3 relative mx-auto my-auto rounded-xl shadow-lg bg-white top-1/2 transform -translate-y-1/2"
+          >
+            <div v-if="!isMergeModal">
+              <div class="text-center p-3 flex-auto justify-center leading-6">
+                <p class="text-md text-gray-500 px-8">
+                  {{ mergeMessage }}
+                </p>
+              </div>
+              <div class="p-3 mt-2 text-center space-x-4 md:block">
+                <button
+                  class="mb-2 md:mb-0 bg-purple-500 border border-purple-500 px-5 py-2 text-sm shadow-sm font-medium tracking-wider text-white rounded-md hover:shadow-lg hover:bg-purple-600"
+                  @click="onClickMerge"
+                >
+                  Merge
+                </button>
+                <button
+                  class="mb-2 md:mb-0 bg-white px-5 py-2 text-sm shadow-sm font-medium tracking-wider border text-gray-600 rounded-md hover:shadow-lg hover:bg-gray-100"
+                  @click="isModalVisible = false"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+            <div v-else>
+              <div class="text-center p-3 flex-auto justify-center leading-6">
+                <p class="text-md text-gray-500 px-8">
+                  โปรดเลือกเขตที่ต้องการรับข้อมูลจากบัญชีที่ต้องการรวม
+                </p>
+                <div class="text-md text-gray-500 px-8">
+                  <div
+                    v-for="(district, index) in districtSubscribe"
+                    :key="index"
+                  >
+                    <input
+                      :id="district"
+                      v-model="selectedDistrict"
+                      type="checkbox"
+                      :value="district"
+                    />
+                    <label :for="district">{{ district }}</label>
+                  </div>
+                </div>
+              </div>
+              <div class="p-3 mt-2 text-center space-x-4 md:block">
+                <button
+                  class="mb-2 md:mb-0 bg-purple-500 border border-purple-500 px-5 py-2 text-sm shadow-sm font-medium tracking-wider text-white rounded-md hover:shadow-lg hover:bg-purple-600"
+                  @click="userMerge"
+                >
+                  Merge
+                </button>
+                <button
+                  class="mb-2 md:mb-0 bg-white px-5 py-2 text-sm shadow-sm font-medium tracking-wider border text-gray-600 rounded-md hover:shadow-lg hover:bg-gray-100"
+                  @click="isModalVisible = false"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </transition>
+    </div>
 </template>
 <style scoped>
 .main {
