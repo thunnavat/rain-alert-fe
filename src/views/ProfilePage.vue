@@ -15,7 +15,7 @@ const notifyText = ref("")
 const GetNotified = ref(false)
 const url = import.meta.env.PROD ? import.meta.env.VITE_API_URL : "/api"
 notifyText.value = "Need Line or Email Notification"
-const navNames = ["Preference", "Change Password"]
+const navNames = ["Preference"]
 const navSelected = ref("")
 const profile = userData()
 const imageUrl = ref()
@@ -29,6 +29,9 @@ const alertType = ref('ERROR')
 onMounted(() => {
   navSelected.value = "Preference"
   profile.getProfile()
+  if(profile.picture == null || !profile.picture.includes("line")){
+    navNames.push("Change Password")
+  }
   imageUrl.value = profile.picture == null ?
   import.meta.env.PROD ?  import.meta.env.VITE_IMAGE_PATH + 'DefaultProfile.png' : '/DefaultProfile.png':
   profile.picture
@@ -51,9 +54,6 @@ function changeRoute(route) {
   console.log(navSelected.value)
 }
 
-imageUrl.value = import.meta.env.PROD
-  ? import.meta.env.VITE_IMAGE_PATH + "DefaultProfile.png"
-  : "/DefaultProfile.png"
 
 const checkLineNotification = async () => {
   if (profile.notificationByLine === false) {
@@ -192,8 +192,8 @@ function changePassword() {
             lang-type="en"
             :no-square="true"
             :img-format="'jpg'"
-            :width="'500'"
-            :height="'500'"
+            :width="500"
+            :height="500"
             @crop-success="CropSuccess"
           ></uploadImg>
       <div class="middle">

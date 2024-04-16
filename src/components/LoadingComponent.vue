@@ -1,10 +1,12 @@
 <script setup>
-
+const props = defineProps({
+  size: { type: String, default: "" }
+})
 </script>
 
 <template>
     <div class="flex justify-center">
-        <div class="loader"></div>
+        <div class="loader" :style="{width: size, height: size}"></div>
     </div>
 </template>
 <style scoped>
