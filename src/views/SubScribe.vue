@@ -4,17 +4,16 @@ import BtnComponent from "../components/BtnComponent.vue"
 import { userData } from "../store/userData.js"
 import { UserDataApi } from "../util/utils"
 import router from "../router"
-
 localStorage.setItem("page", "Subscribe")
 const selectedDistrict = ref("")
 
-
 const isZoom = ref(false)
 const profile = userData()
+const sortBy = ref('Asc')
 console.log(profile.districtSubscribed)
 const isLoggedIn = profile.loginStatus
 function navigateToLogin() {
-  router.push({name: "Login"})
+  router.push({ name: "Login" })
 }
 
 function setProvinces(name) {
@@ -28,6 +27,13 @@ function setProvinces(name) {
   }
 }
 
+function sortDistrict(sortBy) {
+  if (sortBy == "Asc") {
+    districtArray.value.sort()
+  } else {
+    districtArray.value.sort().reverse()
+  }
+}
 const districts = [
   {
     name: "Nong Khaem",
@@ -275,6 +281,8 @@ const districts = [
   }
 ]
 
+const districtArray = ref(districts.map((dis) => dis.name).sort())
+
 const zoomBtn = {
   btnName: "Zoom Image",
   width: "12em"
@@ -284,7 +292,7 @@ const zoomBtn = {
 <template>
   <div
     v-if="isLoggedIn == true"
-    class="bg-[#171717]"
+    class="bg-[#171717] hidden lg:block"
   >
     <btn-component
       :btn-property="zoomBtn"
@@ -338,16 +346,30 @@ const zoomBtn = {
         @mouseleave="selectedDistrict = ''"
       />
     </svg>
+    
   </div>
   <div
-    v-else-if="isLoggedIn == false"
-    class="bg-[#171717] h-96 flex items-center justify-center"
+  v-else-if="isLoggedIn == false"
+  class="bg-[#171717] h-96 flex items-center justify-center"
   >
-    <h1>Please 
-      <span 
-      class="text-blue-600 hover:cursor-pointer hover:underline"
-      @click="navigateToLogin()">Log In</span>
-       First</h1>
+  <h1>Please 
+    <span 
+    class="text-blue-600 hover:cursor-pointer hover:underline"
+    @click="navigateToLogin()">Log In</span>
+    First</h1>
+  </div>
+  <div v-if="isLoggedIn == true" class="lg:hidden flex flex-col md:flex-row md:flex-wrap">
+    <div class="mb-8 flex w-full flex-col">
+      Sort By: 
+      <select name="sortBy" v-model="sortBy" @change="sortDistrict(sortBy)">
+        <option value="Asc" selected>Ascending</option>
+        <option value="Desc">Descending</option>
+      </select>
+
+    </div>
+    <span v-for="(district, index) in districtArray" :key="index" class="px-5 py-2" >
+        <span class="border-b-2 border-solid border-0 pb-2" :class="profile.districtSubscribed.includes(district) ? 'text-yellow-300' : ''" @click="setProvinces(district)">{{ district }}</span>
+    </span>
   </div>
 </template>
 

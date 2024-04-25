@@ -20,22 +20,27 @@ const navSelected = ref("")
 const profile = userData()
 const imageUrl = ref()
 const isUpload = ref(false)
-const oldPass = ref('')
-const newPass = ref('')
-const reNewPass = ref('')
-const alertMsg = ref('')
-const alertType = ref('ERROR')
+const oldPass = ref("")
+const newPass = ref("")
+const reNewPass = ref("")
+const alertMsg = ref("")
+const alertType = ref("ERROR")
 
 onMounted(() => {
   navSelected.value = "Preference"
   profile.getProfile()
-  if(profile.picture == null || !profile.picture.includes("line")){
+  if (profile.picture == null || !profile.picture.includes("line")) {
     navNames.push("Change Password")
   }
-  imageUrl.value = profile.picture == null ?
-  import.meta.env.PROD ?  import.meta.env.VITE_IMAGE_PATH + 'DefaultProfile.png' : '/DefaultProfile.png':
-  profile.picture
+  imageUrl.value =
+    profile.picture == null
+      ? import.meta.env.PROD
+        ? import.meta.env.VITE_IMAGE_PATH + "DefaultProfile.png"
+        : "/DefaultProfile.png"
+      : profile.picture
 })
+
+const screenWidth = window.screen.width
 
 let btnProperty = {
   btnName: "Confirm",
@@ -53,7 +58,6 @@ function changeRoute(route) {
   navSelected.value = route
   console.log(navSelected.value)
 }
-
 
 const checkLineNotification = async () => {
   if (profile.notificationByLine === false) {
@@ -105,119 +109,147 @@ const checkEmailNotification = async () => {
 }
 
 function CropSuccess(imgData) {
+  const file = ref('')
+  if (imgData.target) {
+    file.value = imgData.target.files[0]
+  }
   const headerConfig = {
     headers: {
       Authorization: `Bearer ${localStorage.getItem("access_token")}`,
       "Content-Type": "multipart/form-data"
     }
   }
-  axios.put(`${url}/users/updateProfile`,{
-    picture: dataURLtoFile(imgData, 'profile.jpg')
-  },
-  headerConfig
-  ).then(() => {
-    window.location.reload()
-  })
+  axios
+    .put(
+      `${url}/users/updateProfile`,
+      {
+        picture: file.value != '' ? file.value : dataURLtoFile(imgData, "profile.jpg")
+      },
+      headerConfig
+    )
+    .then(() => {
+      window.location.reload()
+    })
 }
 
 function dataURLtoFile(dataurl, filename) {
-    var arr = dataurl.split(","),
-      mime = arr[0].match(/:(.*?);/)[1],
-      bstr = atob(arr[arr.length - 1]),
-      n = bstr.length,
-      u8arr = new Uint8Array(n);
-    while (n--) {
-      u8arr[n] = bstr.charCodeAt(n);
-    }
-    return new File([u8arr], filename, { type: mime });
+  var arr = dataurl.split(","),
+    mime = arr[0].match(/:(.*?);/)[1],
+    bstr = atob(arr[arr.length - 1]),
+    n = bstr.length,
+    u8arr = new Uint8Array(n)
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n)
   }
+  return new File([u8arr], filename, { type: mime })
+}
 
 function changePassword() {
-  if(oldPass.value == '' || newPass.value == '' || reNewPass.value == ''){
-    alertMsg.value = 'โปรดกรอกข้อมูลให้ครบ'
-    alertType.value = 'ERROR'
-  } 
-  else if(newPass.value != reNewPass.value){
-    alertMsg.value = 'รหัสผ่านไม่ตรงกัน'
-    alertType.value = 'ERROR'
-  }
-  else if(oldPass.value == newPass.value){
-    alertMsg.value = 'รหัสผ่านไม่สามารถเป็นรหัสเดิมได้'
-    alertType.value = 'ERROR'
-  }
-  else if(newPass.value != '' && newPass.value == reNewPass.value){
+  if (oldPass.value == "" || newPass.value == "" || reNewPass.value == "") {
+    alertMsg.value = "โปรดกรอกข้อมูลให้ครบ"
+    alertType.value = "ERROR"
+  } else if (newPass.value != reNewPass.value) {
+    alertMsg.value = "รหัสผ่านไม่ตรงกัน"
+    alertType.value = "ERROR"
+  } else if (oldPass.value == newPass.value) {
+    alertMsg.value = "รหัสผ่านไม่สามารถเป็นรหัสเดิมได้"
+    alertType.value = "ERROR"
+  } else if (newPass.value != "" && newPass.value == reNewPass.value) {
     axios
-    .put(
-      `${url}/users/changePassword`,
-      {
-        userId: profile.userId,
-        currentPassword: oldPass.value,
-        newPassword: newPass.value,
-        retypePassword: reNewPass.value
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`
+      .put(
+        `${url}/users/changePassword`,
+        {
+          userId: profile.userId,
+          currentPassword: oldPass.value,
+          newPassword: newPass.value,
+          retypePassword: reNewPass.value
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`
+          }
         }
-      }
-    ).catch(function (error) {
+      )
+      .catch(function (error) {
         alertMsg.value = error.response.data.message
       })
       .then(() => {
-        if(alertMsg.value == ''){
-          alertType.value = 'SUCCESS'
-          alertMsg.value = 'เปลี่ยนรหัสผ่านเรียบร้อยเเล้ว'
-          oldPass.value = ''
-          newPass.value = ''
-          reNewPass.value = ''
+        if (alertMsg.value == "") {
+          alertType.value = "SUCCESS"
+          alertMsg.value = "เปลี่ยนรหัสผ่านเรียบร้อยเเล้ว"
+          oldPass.value = ""
+          newPass.value = ""
+          reNewPass.value = ""
         }
       })
-
   }
 }
 </script>
 
 <template>
-  <div class="flex">
+  <div class="flex flex-col place-items-center lg:flex-row lg:place-items-start">
     <div class="w-2/6 min-w-fit flex flex-col items-center">
-      <div class="container">
+      <div class="container md:pr-20 lg:pr-0">
         <img
           :src="imageUrl"
           alt=""
-          style="border-radius: 50% "
-          class="image w-auto"
+          class="image w-auto rounded-full"
         />
         <uploadImg
-            v-model="isUpload"
-            lang-type="en"
-            :no-square="true"
-            :img-format="'jpg'"
-            :width="500"
-            :height="500"
-            @crop-success="CropSuccess"
-          ></uploadImg>
-      <div class="middle">
-        <btn-component
-        :btn-property="{btnName: 'Change IMAGE'}"
-        @click="isUpload = true"
+          v-model="isUpload"
+          lang-type="en"
+          :no-square="true"
+          :img-format="'jpg'"
+          @crop-success="CropSuccess"
+        ></uploadImg>
+        <div class="middle hidden lg:block">
+          <btn-component
+            :btn-property="{ btnName: 'Change IMAGE' }"
+            @click="isUpload = true"
+          />
+        </div>
+      </div>
+      <div class="userData flex flex-col place-items-centers  ">
+        <input
+            id="image-file"
+            type="file"
+            @change="CropSuccess"
+            accept="image/jpg, image/jpeg, image/png, image/gif"
+          /><br />
+          <label
+            for="image-file"
+            class="custom-file-input lg:hidden"
+            >Upload Image</label
+            ><br />
+            <div class=" text-center lg:mt-0">
+              Name: {{ profile.displayName }} <br />
+              Email: {{ profile.email }}
+            </div>
+            
+      </div>
+      <div class="static w-full flex-col place-items-center bg-transparent hidden lg:flex">
+        <nav-component
+          :nav-names="navNames"
+          :nav-selected="navSelected"
+          :direction="'col'"
+          :show-log-out="true"
+          @selectedRoute="changeRoute"
+          :override="false"
         />
       </div>
+      <div class="fixed bottom-0 flex z-10 justify-evenly w-full bg-[#13161B] lg:hidden ">
+        <nav-component
+          v-if="(screenWidth < 768 && navNames.length != 1) || screenWidth >= 768"
+          :nav-names="navNames"
+          :nav-selected="navSelected"
+          :direction="'row'"
+          :show-log-out="screenWidth >= 768"
+          @selectedRoute="changeRoute"
+          :override="true"
+        />
       </div>
-      <div class="userData">
-        Name: {{ profile.displayName }} <br />
-        Email: {{ profile.email }}
-      </div>
-
-      <NavComponent
-        class=""
-        :nav-names="navNames"
-        :nav-selected="navSelected"
-        :direction="'col'"
-        :show-log-out="true"
-        @selectedRoute="changeRoute"
-      />
     </div>
-    <div class="w-4/6 flex flex-col items-center text-lg">
+    <div class="w-full lg:w-4/6 flex flex-col items-center text-lg">
       <div class="flex justify-evenly w-full">
         <label class="inline-flex items-center me-5 cursor-pointer">
           <input
@@ -228,7 +260,7 @@ function changePassword() {
             @click="checkLineNotification"
           />
           <div
-            class="relative w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"
+            class=" relative w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"
           ></div>
           <span
             class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300"
@@ -256,31 +288,31 @@ function changePassword() {
         v-if="navSelected == 'Preference'"
         class="w-full"
       >
-        <div class="bg-[#191D23] py-2 my-14 rounded-lg">
-          <div class="pb-5 mt-5 border-solid border-black border-0 border-b-2">
-            My Favorites
-          </div>
-          <div v-if="profile.districtSubscribed.length == 0" class="py-10">
+      <div class="bg-[#191D23] py-2 my-14 rounded-lg">
+        <div class="pb-5 mt-5 border-solid border-black border-0 border-b-2">
+          My Favorites
+        </div>
+        <div class="md:hidden pt-5" v-show="(profile.notificationByEmail != true && profile.notificationByLine != true) && profile.districtSubscribed.length != 0"> {{ notifyText }} </div>
+          <div
+            v-if="profile.districtSubscribed.length == 0"
+            class="py-10 tracking-wider"
+          >
             You Currently Have No District Subscribed
           </div>
           <div
             v-else-if="profile.districtSubscribed.length > 0"
             v-for="(province, index) in profile.districtSubscribed"
             :key="index"
-            class="flex justify-evenly my-9"
+            class="flex  justify-evenly  my-9 "
           >
-            <div class="w-1/5">
+            <div class="md:w-1/5 pb-2 md:pb-0">
               {{ province }}
             </div>
-            <input
-              type="checkbox"
-              v-if="GetNotified == true"
-            />
             <div>
-              <span> {{ notifyText }} </span>
+              <span class="hidden md:block" v-show="(profile.notificationByEmail != true && profile.notificationByLine != true) && profile.districtSubscribed.length != 0"> {{ notifyText }} </span>
             </div>
             <span
-              class="text-red-600 cursor-pointer select-none"
+              class="text-red-600 cursor-pointer select-none pt-2 md:pt-0"
               @click="setProvinces(province)"
               >X</span
             >
@@ -289,12 +321,12 @@ function changePassword() {
       </div>
       <div
         v-else-if="navSelected == 'Change Password'"
-        class="w-full flex justify-evenly bg-[#191d23] mt-16 rounded-lg"
+        class="w-full flex flex-col place-items-center md:flex-row justify-evenly bg-[#191d23] mt-16 rounded-lg"
       >
-      <div class="w-1/2">
+        <div class="w-full md:w-1/2">
           <alert-component
-          :alert-msg= alertMsg
-          :alert-type="alertType"
+            :alert-msg="alertMsg"
+            :alert-type="alertType"
           />
           <div class="formText pt-11">
             Old Password <br />
@@ -303,6 +335,7 @@ function changePassword() {
               type="password"
               required
               class="textInput"
+              @change="alertMsg = ''"
               @keypress="alertMsg = ''"
             />
           </div>
@@ -313,9 +346,25 @@ function changePassword() {
               type="password"
               required
               class="textInput"
+              @change="alertMsg = ''"
               @keypress="alertMsg = ''"
             />
           </div>
+          <ul class="text-sm text-left ">
+            <li :class="newPass.length >= 8 ? 'text-green-600' : ''">
+              อย่างน้อย 8 ตัวอักษร
+            </li>
+            <li :class="/\d/.test(newPass) ? 'text-green-600' : ''">ตัวเลข</li>
+            <li :class="/[A-Z]/.test(newPass) ? 'text-green-600' : ''">
+              ตัวพิมพ์ใหญ่
+            </li>
+            <li :class="/[a-z]/.test(newPass) ? 'text-green-600' : ''">
+              ตัวพิมพ์เล็ก
+            </li>
+            <li :class="/(?=.*[\W_])/.test(newPass) ? 'text-green-600' : ''">
+              อักขระพิเศษ
+            </li>
+          </ul>
           <div class="formText pt-6 pb-11">
             Re-type new Password <br />
             <input
@@ -323,6 +372,7 @@ function changePassword() {
               type="password"
               required
               class="textInput"
+              @change="alertMsg = ''"
               @keypress="alertMsg = ''"
             />
           </div>
@@ -347,18 +397,18 @@ function changePassword() {
 }
 
 .formText {
-  @apply text-2xl font-normal;
+  @apply text-2xl font-normal pl-5 md:pl-0;
   text-align: left;
 }
 
 .textInput {
-  width: 100%;
   height: 2em;
   border: none;
-  border-bottom: 1px solid black;
+  border-bottom: 1px solid white;
   background-color: #191d23;
   margin-left: 1em;
   transition: border 200ms ease-out;
+  @apply w-10/12 md:w-full
 }
 
 .textInput:focus {
@@ -383,14 +433,14 @@ input:-webkit-autofill:active {
 .image {
   opacity: 1;
   display: block;
-  width: 100%;
+  width: 15vw;
   height: auto;
-  transition: .5s ease;
+  transition: 0.5s ease;
   backface-visibility: hidden;
 }
 
 .middle {
-  transition: .5s ease;
+  transition: 0.5s ease;
   opacity: 0;
   position: absolute;
   top: 50%;
@@ -409,9 +459,26 @@ input:-webkit-autofill:active {
 }
 
 .text {
-  background-color: #04AA6D;
+  background-color: #04aa6d;
   color: white;
   font-size: 16px;
   padding: 16px 32px;
 }
+@media screen and (max-width: 768px) {
+  .image {
+    width: 40vw;
+  }
+  .container:hover .image {
+    opacity: 1;
+  }
+}
+input[type="file"] {
+  display: none;
+}
+
+.custom-file-input {
+  
+  @apply text-blue-400 border border-solid p-5 text-center lg:hidden
+}
+
 </style>

@@ -136,7 +136,7 @@ function selectedStatus(selectStatus) {
               : ''
           "
         >
-          {{ col[header.toLowerCase()] }}
+        {{ col[(header.toLowerCase() == 'status'? 'status' : 'district')] }}
         </div>
       </div>
     </div>

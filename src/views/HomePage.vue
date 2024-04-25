@@ -1,10 +1,12 @@
 <script setup>
 import InformationBox from "../components/InformationBox.vue"
 import LoadingComponent from "../components/LoadingComponent.vue"
+import { useRoute } from 'vue-router';
 import { ref, onBeforeMount, onMounted } from "vue"
 import axios from "axios"
 import moment from "moment"
 import { userData } from "../store/userData"
+const route = useRoute()
 onBeforeMount(() => {
   getReports().then(() => {
     isLoading.value = false
@@ -81,8 +83,8 @@ const favorites = ref([])
 
 <template>
   <div class="page">
-    <div class="header">
-      <h1 class="header-text">RAINALERT</h1>
+    <div class="header lg:mx-12">
+      <h1 class="header-text lg:text-transparent">RAINALERT</h1>
     </div>
     <div class="content">
       <!-- <h3>Daily Weather Forecast</h3> -->
@@ -103,8 +105,8 @@ const favorites = ref([])
 
 .header {
   padding: 6em;
-  margin-left: 2em;
-  margin-right: 3em;
+  /* margin-left: 2em; */
+  /* margin-right: 3em; */
   background-image: url("../assets/Title_Background.png");
   background-repeat: no-repeat;
   background-size: cover;
@@ -112,12 +114,11 @@ const favorites = ref([])
 }
 
 .header-text {
-  font-size: 60px;
+  font-size:calc(12px + 3vw);
   background-image: linear-gradient(yellow, white);
   -webkit-background-clip: text;
   background-clip: text;
-  color: transparent;
-  background-size: 300% 300%;
+  background-size: 100% 100%;
   animation: animatedText 5s ease infinite;
 }
 
@@ -132,7 +133,8 @@ const favorites = ref([])
 }
 .content {
   text-align: left;
-  margin-left: 2em;
+  /* margin-left: 2em; */
   margin-top: 6em;
 }
+
 </style>
