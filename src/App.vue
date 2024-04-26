@@ -9,6 +9,8 @@ import { onMounted } from "vue"
 const profile = userData()
 const showNav = ref(false)
 
+let navNames = ref(["Home", "Rain Fall", "Subscribe"])
+
 onMounted(() => {
   profile.getLoginStatus
   console.log(localStorage.getItem('page'))
@@ -22,6 +24,11 @@ onMounted(() => {
         window.location.reload()
       }
     }, profile.getUserData.exp * 1000 - Date.now())
+  }
+  if(profile.getUserData.role == "ADMIN"){
+    navNames.value.push('Check Report')
+  }else if(profile.getUserData.role != "ADMIN"){
+    navNames.value.push('Report Bug')
   }
 })
 
@@ -56,7 +63,6 @@ let ProfileIcon = {
   bgColor: "black"
 }
 
-let navNames = ["Home", "Rain Fall", "Subscribe", "Report Bug"]
 
 let navSelected = ref(page)
 

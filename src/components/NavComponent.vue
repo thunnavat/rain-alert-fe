@@ -18,7 +18,7 @@ const btnProperty = {
   iconPath: import.meta.env.PROD ?  import.meta.env.VITE_IMAGE_PATH + 'LogoutIcon.svg' : '/LogoutIcon.svg',
   bgColor: "#1A212E",
 }
-let homeRoutes = ["Home", "Rain Fall", "Subscribe", "Report Bug"]
+let homeRoutes = ["Home", "Rain Fall", "Subscribe", "Report Bug", "Check Report"]
 function changePage(route) {
   selected.value = route
   if(homeRoutes.includes(route)){

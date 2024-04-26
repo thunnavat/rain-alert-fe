@@ -4,6 +4,7 @@ import TableComponent from "../components/TableComponent.vue"
 import LoadingComponent from "../components/LoadingComponent.vue"
 import { ref, onBeforeMount } from "vue"
 import moment from "moment"
+import { userData } from "../store/userData"
 
 localStorage.setItem('page', 'Rain Fall')
 
@@ -14,12 +15,17 @@ const sort = ref()
 const selectedVal = ref()
 const selectedStatus = ref("all")
 const isLoading = ref(true)
+const profile = userData()
 
 onBeforeMount(() => {
   getTimes()
   getReports().then(() => {
     isLoading.value = false
   })
+  if(profile.getUserData.role == 'ADMIN'){
+    headers.push('Change Status')
+  }
+
 })
 
 const reports = ref([])
@@ -39,7 +45,8 @@ const getReports = async (reportTime, sorted, selectedStatus) => {
       for (let i in res.data) {
         reports.value.push({
           district: res.data[i].reportDistrict.districtName,
-          status: res.data[i].rainStatus
+          status: res.data[i].rainStatus,
+          id: res.data[i]._id
         })
       }
     })
