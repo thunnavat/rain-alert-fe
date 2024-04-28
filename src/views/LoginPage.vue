@@ -10,6 +10,8 @@ import AlertComponent from "../components/AlertComponent.vue"
 import LoadingComponent from "../components/LoadingComponent.vue"
 
 localStorage.setItem("page", "Login")
+const time = ref(0)
+const otpText = ref("GET OTP")
 const Mode = ref("login")
 const email = ref("")
 const passWord = ref("")
@@ -36,7 +38,7 @@ let btnProp = {
 
 let signUpBtn = {
   btnName: "Create Account",
-  width: window.screen.width < 1600 ? "10em" : "12em",
+  width: window.screen.width < 1600 ? "10em" : "12em"
 }
 
 let resetBtn = {
@@ -51,13 +53,13 @@ let cancelBtn = {
 }
 let nextBtn = {
   btnName: "Next",
-  width: window.screen.width < 1600 ? "10em" : "12em",
+  width: window.screen.width < 1600 ? "10em" : "12em"
 }
 
 let prevBtn = {
   ...cancelBtn,
   btnName: "Previous",
-  width: window.screen.width < 1600 ? "10em" : "12em",
+  width: window.screen.width < 1600 ? "10em" : "12em"
 }
 let lineBtn = {
   btnName: "Log in with LINE",
@@ -73,7 +75,7 @@ let lineBtn = {
 }
 
 const otpBtn = {
-  btnName: "GET OTP",
+  btnName: time.value + "GET OTP",
   width: "100%"
 }
 
@@ -85,7 +87,6 @@ const userInfo = ref()
 
 onMounted(() => {
   getInitialProps()
-  console.log(window.screen.width)
 })
 
 const getInitialProps = async () => {
@@ -180,8 +181,7 @@ function isValidate() {
   } else if (!regExp.test(email.value.trim())) {
     alertMsg.value = "กรุณากรอกอีเมลที่ถูกต้อง"
     return false
-  }
-  else if (
+  } else if (
     passWord.value == "" &&
     (Mode.value == "sign-up" || Mode.value == "login")
   ) {
@@ -199,7 +199,11 @@ function isValidate() {
     } else if (selectedPage.value == 3 && displayName.value.trim() == "") {
       alertMsg.value = "กรุณาใส่ชื่อที่ต้องการเเสดง"
       return false
-    } else if (selectedPage.value == 4 && otp.value == "") {
+    } else if (selectedPage.value == 3 && displayName.value.trim().length > 50) {
+      alertMsg.value = "DisplayName ต้องมีไม่เกิน 50 ตัวอักษร"
+      return false
+    }
+     else if (selectedPage.value == 4 && otp.value == "") {
       alertMsg.value = "กรุณากรอกรหัส OTP"
       return false
     } else if (selectedPage.value == 4 && otp.value.length != 6) {
@@ -213,17 +217,33 @@ function isValidate() {
   }
 }
 
-function emailValidate() {
+async function emailValidate() {
+  alertMsg.value = ""
   alertType.value = "ERROR"
   const regExp = new RegExp(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
+  await axios
+    .post(`${url}/users/checkEmail`, {
+      email: email.value
+    })
+    .catch(function (error) {
+      alertMsg.value = error.response.data.message
+      return false
+    })
+
   if (email.value.trim() == "") {
     alertMsg.value = "อีเมลไม่สามารถเว้นว่างได้"
     return false
   } else if (!regExp.test(email.value.trim())) {
     alertMsg.value = "กรุณากรอกอีเมลที่ถูกต้อง"
     return false
+  } else if (email.value.trim().length >= 50){
+    alertMsg.value = "อีเมลต้องมีความยาวไม่เกิน 50 ตัวอักษร"
   }
-  return true
+   else if (alertMsg.value != "") {
+    return false
+  } else {
+    return true
+  }
 }
 
 function login() {
@@ -237,15 +257,17 @@ function login() {
       .catch(function (error) {
         alertMsg.value = error.response.data.message
       })
-      .then(async(res) => {
+      .then(async (res) => {
         localStorage.setItem("access_token", res.data.accessToken)
-        await profile.getProfile() 
+        localStorage.setItem("refresh_token", res.data.refreshToken)
+        await profile.getProfile()
         router.push({ name: "Home" })
       })
   }
 }
 
 function signUp() {
+  alertMsg.value = ""
   const headerConfig = {
     headers: {
       "Content-Type": "multipart/form-data"
@@ -277,9 +299,11 @@ function signUp() {
               password: passWord.value,
               registerType: "WEB"
             })
-            .then(async(res) => {
+            .then(async (res) => {
+              console.log(res.data)
               localStorage.setItem("access_token", res.data.accessToken)
-              await profile.getProfile() 
+              localStorage.setItem("refresh_token", res.data.refreshToken)
+              await profile.getProfile()
               router.push({ name: "Home" })
             })
         }
@@ -287,9 +311,9 @@ function signUp() {
   }
 }
 
-function getOtp() {
+async function getOtp() {
   alertMsg.value = ""
-  if (emailValidate() == true) {
+  if ((await emailValidate()) == true) {
     loading.value = true
     axios
       .post(`${url}/login/request-email-verification`, {
@@ -305,6 +329,16 @@ function getOtp() {
           alertMsg.value = "ส่งรหัส OTP ไปยัง Email ของคุณเเล้ว"
           alertType.value = "SUCCESS"
           loading.value = false
+          time.value = 30
+          const interval = setInterval(() => {
+            time.value--
+          }, 1000)
+          setTimeout(() => {
+            time.value = 0
+            clearInterval(interval)
+          }, 30000)
+
+          otpText.value = 'Resend OTP'
         }
       })
   }
@@ -320,13 +354,13 @@ function resetPs() {
       .catch(function (error) {
         loading.value = false
         alertMsg.value = error.response.data.message
-        alertType.value = 'ERROR'
+        alertType.value = "ERROR"
       })
       .then(() => {
-        if(alertMsg.value == ''){
+        if (alertMsg.value == "") {
           loading.value = false
-          alertMsg.value = 'ส่งอีเมล์ไปยังบัญชีของคุณเเล้ว'
-          alertType.value = 'SUCCESS'
+          alertMsg.value = "ส่งอีเมล์ไปยังบัญชีของคุณเเล้ว"
+          alertType.value = "SUCCESS"
         }
       })
   }
@@ -356,7 +390,7 @@ function CropSuccess(cropData) {
 }
 
 function UploadPicture(cropData) {
-  const file = dataURLtoFile(cropData, 'profile.jpg')
+  const file = dataURLtoFile(cropData, "profile.jpg")
   return file
 }
 
@@ -372,10 +406,10 @@ function dataURLtoFile(dataurl, filename) {
   return new File([u8arr], filename, { type: mime })
 }
 
-function changePage(direction) {
-  alertMsg.value = ''
+async function changePage(direction) {
+  alertMsg.value = ""
   if (direction == "+1") {
-    if (selectedPage.value == 1 && emailValidate()) {
+    if (selectedPage.value == 1 && (await emailValidate())) {
       selectedPage.value += 1
     } else if (selectedPage.value > 1 && isValidate()) {
       selectedPage.value += 1
@@ -397,17 +431,17 @@ const userMerge = async () => {
       })
       .then(async () => {
         await axios
-            .post(`${url}/login`, {
-              lineId: userInfo.value.profile.sub,
-              channelId: userInfo.value.profile.aud,
-              registerType: "LINE"
-            })
-            .then((res) => {
-              localStorage.setItem("access_token", res.data.accessToken)
-              localStorage.setItem("page", "Home")
-              profile.getProfile()
-              router.push({ name: "Home" })
-            })
+          .post(`${url}/login`, {
+            lineId: userInfo.value.profile.sub,
+            channelId: userInfo.value.profile.aud,
+            registerType: "LINE"
+          })
+          .then((res) => {
+            localStorage.setItem("access_token", res.data.accessToken)
+            localStorage.setItem("page", "Home")
+            profile.getProfile()
+            router.push({ name: "Home" })
+          })
       })
   } catch (error) {
     console.error(error)
@@ -436,103 +470,29 @@ const onClickMerge = async () => {
 
 <template>
   <div>
-
-  <div
-    v-if="Mode == 'login'"
-    class="main"
-  >
-    <div>
-      <img
-        src="../assets/Login_Image.png"
-        alt=""
-        class="image"
-      />
-    </div>
-
     <div
-      class="info"
-      :class="Mode == 'login' ? '' : 'altFont w-4/6'"
+      v-if="Mode == 'login'"
+      class="main"
     >
-      <div class="btn h-auto max-w-full">
-        <a :href="lineLoginUrl">
-          <btn-component :btn-property="lineBtn"/>
-        </a>
-      </div>
-      <alert-component :alert-msg="alertMsg" />
-      <div class="formText pt-6">
-        Email <br />
-        <input
-          v-model="email"
-          type="text"
-          required
-          class="textInput"
-          @change="alertMsg = ''"
-          @keypress="alertMsg = ''"
-          placeholder="Enter Your Email Address"
-        />
-      </div>
-      <div class="formText pt-10">
-        Password <br />
-        <input
-          v-model="passWord"
-          type="password"
-          required
-          class="textInput"
-          @change="alertMsg = ''"
-          @keypress="alertMsg = ''"
-          placeholder="Enter Your Password"
+      <div>
+        <img
+          src="../assets/Login_Image.png"
+          alt=""
+          class="image"
         />
       </div>
 
-      <div class="pt-10 flex flex-col place-items-center md:flex-row">
-        <btn-component
-          :btn-property="btnProp"
-          class="btn mb-5 md:mb-0"
-          @click="login()"
-        />
-        <span
-          class="btn altFont md:pl-7 pt-2"
-          @click=";(Mode = 'sign-up'), (alertMsg = '')"
-          >Need to sign up</span
-        >
-      </div>
-      <p
-        class="btn altFont px-5 py-5 border-t border-0 border-solid border-slate-600 md:border-0 md:px-0 md:pt-2 text-center text-[#FF0000]"
-        @click=";(Mode = 'fgPass'), (alertMsg = '')"
-      >
-        Forgotten password?
-      </p>
-    </div>
-  </div>
-  <div
-    v-else-if="Mode == 'sign-up'"
-    class="main"
-  >
-    <div>
-      <img
-        src="../assets/Login_Image.png"
-        alt=""
-        class="image"
-      />
-    </div>
-    <uploadImg
-              v-model="isUpload"
-              lang-type="en"
-              :no-square="true"
-              :img-format="'jpg'"
-              @crop-success="CropSuccess"
-    ></uploadImg>
-    <div class="info altFont md:w-full lg:w-4/6 wrapper flex flex-col justify-between ">
-      <alert-component
-        :alert-msg="alertMsg"
-        :alert-type="alertType"
-        class="w-full"
-      />
       <div
-        class="slide"
-        :class="selectedPage == 1 ? 'selected' : ''"
+        class="info"
+        :class="Mode == 'login' ? '' : 'altFont w-4/6'"
       >
-        <div class="formText pt-4">
+        <div class="btn h-auto max-w-full">
+          <a :href="lineLoginUrl">
+            <btn-component :btn-property="lineBtn" />
+          </a>
+        </div>
+        <alert-component :alert-msg="alertMsg" />
+        <div class="formText pt-6">
           Email <br />
           <input
             v-model="email"
@@ -544,316 +504,402 @@ const onClickMerge = async () => {
             placeholder="Enter Your Email Address"
           />
         </div>
-        <div class="flex justify-center md:justify-end">
-          <btn-component
-          :btn-property="nextBtn"
-          @click="changePage('+1')"
-          class="btn pt-10 mb-5 md:mb-0"
-        />
-        </div>
-
-      </div>
-      <div
-        class=""
-        :class="
-          selectedPage == 2
-            ? 'selected'
-            : selectedPage > 2
-            ? 'slide'
-            : 'complete'
-        "
-      >
-        <div class="formText">
+        <div class="formText pt-10">
           Password <br />
           <input
             v-model="passWord"
             type="password"
             required
             class="textInput"
-            @keypress="alertMsg = ''"
             @change="alertMsg = ''"
+            @keypress="alertMsg = ''"
             placeholder="Enter Your Password"
           />
-          <ul class="text-sm">
-            <li :class="passWord.length >= 8 ? 'text-green-600' : ''">
-              อย่างน้อย 8 ตัวอักษร
-            </li>
-            <li :class="/\d/.test(passWord) ? 'text-green-600' : ''">ตัวเลข</li>
-            <li :class="/[A-Z]/.test(passWord) ? 'text-green-600' : ''">
-              ตัวพิมพ์ใหญ่
-            </li>
-            <li :class="/[a-z]/.test(passWord) ? 'text-green-600' : ''">
-              ตัวพิมพ์เล็ก
-            </li>
-            <li :class="/(?=.*[\W_])/.test(passWord) ? 'text-green-600' : ''">
-              อักขระพิเศษ
-            </li>
-          </ul>
         </div>
-        <div class="formText pt-4">
-          Re-type password <br />
-          <input
-            v-model="rePassWord"
-            type="password"
-            required
-            class="textInput"
-            @change="alertMsg = ''"
-            @keypress="alertMsg = ''"
-            placeholder="Re-Enter Your Password"
-          />
-        </div>
-        <div class="flex flex-col md:flex-row-reverse justify-evenly pt-5">
+
+        <div class="pt-10 flex flex-col place-items-center md:flex-row">
           <btn-component
-            :btn-property="nextBtn"
-            @click="changePage('+1')"
-            class="py-5 self-center"
+            :btn-property="btnProp"
+            class="btn mb-5 md:mb-0"
+            @click="login()"
           />
-          <btn-component
-            :btn-property="prevBtn"
-            @click="changePage('-1')"
-            class="pb-5 md:pb-0 self-center"
-          />
+          <span
+            class="btn altFont md:pl-7 pt-2"
+            @click=";(Mode = 'sign-up'), (alertMsg = '')"
+            >Need to sign up</span
+          >
         </div>
+        <p
+          class="btn altFont px-5 py-5 border-t border-0 border-solid border-slate-600 md:border-0 md:px-0 md:pt-2 text-center text-[#FF0000]"
+          @click=";(Mode = 'fgPass'), (alertMsg = '')"
+        >
+          Forgotten password?
+        </p>
       </div>
+    </div>
+    <div
+      v-else-if="Mode == 'sign-up'"
+      class="main"
+    >
+      <div>
+        <img
+          src="../assets/Login_Image.png"
+          alt=""
+          class="image"
+        />
+      </div>
+      <uploadImg
+        v-model="isUpload"
+        lang-type="en"
+        :no-square="true"
+        :img-format="'jpg'"
+        @crop-success="CropSuccess"
+      ></uploadImg>
       <div
-        class="slide"
-        :class="
-          selectedPage == 3
-            ? 'selected'
-            : selectedPage > 3
-            ? 'slide'
-            : 'complete'
-        "
+        class="info altFont md:w-full lg:w-4/6 wrapper flex flex-col justify-between"
       >
-        <div class="formText pt-4">
-          DisplayName <br />
+        <alert-component
+          :alert-msg="alertMsg"
+          :alert-type="alertType"
+          class="w-full"
+        />
+        <div
+          class="slide"
+          :class="selectedPage == 1 ? 'selected' : ''"
+        >
+          <div class="formText pt-4">
+            Email <br />
+            <input
+              v-model="email"
+              type="text"
+              required
+              class="textInput"
+              @keypress="alertMsg = ''"
+              autocomplete="new-password"
+              placeholder="Enter Your Email Address"
+            />
+          </div>
+          <div class="flex justify-center md:justify-end">
+            <btn-component
+              :btn-property="nextBtn"
+              @click="changePage('+1')"
+              class="btn pt-10 mb-5 md:mb-0"
+            />
+          </div>
+        </div>
+        <div
+          class=""
+          :class="
+            selectedPage == 2
+              ? 'selected'
+              : selectedPage > 2
+              ? 'slide'
+              : 'complete'
+          "
+        >
+          <div class="formText">
+            Password <br />
+            <input
+              v-model="passWord"
+              type="password"
+              required
+              class="textInput"
+              @keypress="alertMsg = ''"
+              @change="alertMsg = ''"
+              autocomplete="new-password"
+              placeholder="Enter Your Password"
+            />
+            <ul class="text-sm">
+              <li :class="passWord.length >= 8 ? 'text-green-600' : ''">
+                At Least 8 Characters
+              </li>
+              <li :class="/\d/.test(passWord) ? 'text-green-600' : ''">
+                Number
+              </li>
+              <li :class="/[A-Z]/.test(passWord) ? 'text-green-600' : ''">
+                Uppercase Characters
+              </li>
+              <li :class="/[a-z]/.test(passWord) ? 'text-green-600' : ''">
+                Lowercase Characters
+              </li>
+              <li :class="/(?=.*[\W_])/.test(passWord) ? 'text-green-600' : ''">
+                Special Characters
+              </li>
+            </ul>
+          </div>
+          <div class="formText pt-4">
+            Re-type password <br />
+            <input
+              v-model="rePassWord"
+              type="password"
+              required
+              class="textInput"
+              @change="alertMsg = ''"
+              @keypress="alertMsg = ''"
+              placeholder="Re-Enter Your Password"
+              autocomplete="new-password"
+            />
+          </div>
+          <div class="flex flex-col md:flex-row-reverse justify-evenly pt-5">
+            <btn-component
+              :btn-property="nextBtn"
+              @click="changePage('+1')"
+              class="py-5 self-center"
+            />
+            <btn-component
+              :btn-property="prevBtn"
+              @click="changePage('-1')"
+              class="pb-5 md:pb-0 self-center"
+            />
+          </div>
+        </div>
+        <div
+          class="slide"
+          :class="
+            selectedPage == 3
+              ? 'selected'
+              : selectedPage > 3
+              ? 'slide'
+              : 'complete'
+          "
+        >
+          <div class="formText pt-4">
+            DisplayName <br />
+            <input
+              v-model="displayName"
+              type="text"
+              required
+              class="textInput"
+              @change="alertMsg = ''"
+              @keypress="alertMsg = ''"
+              placeholder="Enter Your Display Name"
+            />
+          </div>
+          <div class="formText pt-6 pb-6">
+            Choose Your Profile Picture (Optional)<br />
+            <input
+              id="image-file"
+              type="file"
+              @change="CropSuccess"
+              accept="image/jpg, image/jpeg, image/png, image/gif"
+            /><br />
+            <label
+              for="image-file"
+              class="custom-file-input mb-5 md:hidden"
+              >Upload Image</label
+            >
+            <button
+              @click="isUpload = true"
+              class="hidden md:block"
+            >
+              Upload Image
+            </button>
+            <div class="pt-3">
+              <img
+                v-show="imgData != ''"
+                class="hover:cursor-pointer bg-slate-900"
+                style="clip-path: circle(); width: 10em"
+                :src="imgData"
+                alt="NO IMAGE CHOSEN"
+                @click="imgFrom == 'crop' ? (isUpload = true) : ''"
+              />
+            </div>
+            <div
+              class="btn text-red-600 border border-solid p-1 text-center"
+              @click="imgData = ''"
+              v-show="imgData != ''"
+            >
+              Remove Image
+            </div>
+          </div>
+          <div class="flex flex-col md:flex-row-reverse justify-evenly pt-5">
+            <btn-component
+              :btn-property="nextBtn"
+              @click="changePage('+1')"
+              class="py-5 self-center"
+            />
+            <btn-component
+              :btn-property="prevBtn"
+              @click="changePage('-1')"
+              class="pb-5 md:pb-0 self-center"
+            />
+          </div>
+        </div>
+        <div
+          class="slide"
+          :class="
+            selectedPage == 4
+              ? 'selected'
+              : selectedPage > 4
+              ? 'slide'
+              : 'complete'
+          "
+        >
+          <div class="flex flex-col pt-5">
+            <button v-if="loading == false" class="w-full disabled:hover:cursor-not-allowed bg-[#484848]" @click="getOtp()" :disabled="time != 0">
+              {{ time == 0 ? '' : time }}  {{ otpText }}
+            </button>
+            <!-- <btn-component
+              v-if="loading == false"
+              :btn-property="otpBtn"
+              @click="getOtp()"
+              class=""
+            /> -->
+            <loading-component
+              :size="'12px'"
+              v-else-if="loading == true"
+            />
+            <input
+              type="text"
+              maxlength="6"
+              class="textInput pt-4"
+              pattern="\d*"
+              v-model="otp"
+              placeholder="OTP Verification Code"
+              @keypress="alertMsg = ''"
+            />
+            <div class="flex flex-col md:flex-row-reverse justify-evenly pt-5">
+              <btn-component
+                :btn-property="signUpBtn"
+                class="btn mb-5 md:mb-0 self-center"
+                @click="signUp()"
+              />
+              <btn-component
+                :btn-property="prevBtn"
+                @click="changePage('-1')"
+                class="pb-5 md:pb-0 self-center"
+              />
+            </div>
+          </div>
+          <div
+            class="py-8 flex flex-col place-items-center lg:flex-row lg:mb-3"
+          ></div>
+        </div>
+
+        <span
+          class="btn altFont lg:pl-7 py-5 border-t border-0 border-solid border-slate-600 md:border-0 md:px-0 md:pt-2 text-center"
+          @click=";(Mode = 'login'), (alertMsg = '')"
+          >I already have account</span
+        >
+      </div>
+    </div>
+    <div
+      v-else-if="Mode == 'fgPass'"
+      class="main"
+    >
+      <div>
+        <img
+          src="../assets/Login_Image.png"
+          alt=""
+          class="image"
+        />
+      </div>
+      <div class="info altFont self-center md:w-4/6">
+        <loading-component
+          class="h-0"
+          v-show="loading"
+        />
+        <alert-component
+          :alert-msg="alertMsg"
+          :alert-type="alertType"
+        />
+
+        <div class="formText">
+          Email <br />
           <input
-            v-model="displayName"
+            v-model="email"
             type="text"
             required
             class="textInput"
             @change="alertMsg = ''"
             @keypress="alertMsg = ''"
-            placeholder="Enter Your Display Name"
+            placeholder="Enter Your Email Address"
           />
-        </div>
-        <div class="formText pt-6 pb-6">
-          Choose Your Profile Picture (Optional)<br />
-          <input
-            id="image-file"
-            type="file"
-            @change="CropSuccess"
-            accept="image/jpg, image/jpeg, image/png, image/gif"
-          /><br />
-          <label
-            for="image-file"
-            class="custom-file-input mb-5 md:hidden"
-            >Upload Image</label
-          >
-          <button
-            @click="isUpload = true"
-            class="hidden md:block"
-          >
-            Upload Image
-          </button>
-          <div class="pt-3">
-            <img
-              v-show="imgData != ''"
-              class="hover:cursor-pointer bg-slate-900"
-              style="clip-path: circle(); width: 10em"
-              :src="imgData"
-              alt="NO IMAGE CHOSEN"
-              @click="imgFrom == 'crop' ? (isUpload = true) : ''"
-            />
-            
-          </div>
-          <div class="btn text-red-600 border border-solid p-1 text-center " @click="imgData = ''" v-show="imgData != ''">Remove Image</div>
-        </div>
-        <div class="flex flex-col md:flex-row-reverse justify-evenly pt-5">
-          <btn-component
-            :btn-property="nextBtn"
-            @click="changePage('+1')"
-            class="py-5 self-center"
-          />
-          <btn-component
-            :btn-property="prevBtn"
-            @click="changePage('-1')"
-            class="pb-5 md:pb-0 self-center"
-          />
-        </div>
-      </div>
-      <div class="slide" :class="
-          selectedPage == 4
-            ? 'selected'
-            : selectedPage > 4
-            ? 'slide'
-            : 'complete'
-        ">
-        <div class="flex flex-col pt-5">
-          <btn-component
-            v-if="loading == false"
-            :btn-property="otpBtn"
-            @click="getOtp()"
-            class=""
-          />
-          <loading-component
-            :size="'12px'"
-            v-else-if="loading == true"
-          />
-          <input
-          type="text"
-          maxlength="6"
-          class="textInput pt-4"
-          pattern="\d*"
-          v-model="otp"
-          placeholder="OTP Verification Code"
-          @change="alertMsg = ''"
-          @keypress="alertMsg = ''"
-        />
-          <div class="flex flex-col md:flex-row-reverse justify-evenly pt-5">
-            <btn-component
-            :btn-property="signUpBtn"
-            class="btn mb-5 md:mb-0 self-center"
-            @click="signUp()"
-          />
-          <btn-component
-            :btn-property="prevBtn"
-            @click="changePage('-1')"
-            class="pb-5 md:pb-0 self-center"
-          />
-        </div>
         </div>
         <div
-          class="py-8 flex flex-col place-items-center lg:flex-row lg:mb-3"
-        ></div>
-
-      </div>
-
-      <span
-        class="btn altFont lg:pl-7 py-5 border-t border-0 border-solid border-slate-600 md:border-0 md:px-0 md:pt-2 text-center"
-        @click=";(Mode = 'login'), (alertMsg = '')"
-        >I already have account</span
-      >
-    </div>
-  </div>
-  <div
-    v-else-if="Mode == 'fgPass'"
-    class="main"
-  >
-    <div>
-      <img
-        src="../assets/Login_Image.png"
-        alt=""
-        class="image"
-      />
-    </div>
-    <div class="info altFont self-center md:w-4/6">
-      <loading-component
-        class="h-0"
-        v-show="loading"
-      />
-      <alert-component
-        :alert-msg="alertMsg"
-        :alert-type="alertType"
-      />
-
-      <div class="formText">
-        Email <br />
-        <input
-          v-model="email"
-          type="text"
-          required
-          class="textInput"
-          @change="alertMsg = ''"
-          @keypress="alertMsg = ''"
-          placeholder="Enter Your Email Address"
-        />
-      </div>
-      <div
-        class="pt-20 flex flex-col-reverse place-items-center md:flex-row md:pt-28"
-      >
-        <btn-component
-          :btn-property="cancelBtn"
-          class="btn py-4 lg:py-0 md:pr-20"
-          @click=";(Mode = 'login'), (alertMsg = '')"
-        />
-        <btn-component
-          :btn-property="resetBtn"
-          class="btn"
-          @click="resetPs()"
-        />
-      </div>
-    </div>
-  </div>
-  
-  <transition name="fade">
-    <div v-if="isModalVisible">
-      <div class="absolute bg-black bg-opacity-70 inset-0 z-0">
-        <div
-          class="w-full max-w-lg p-3 relative mx-auto my-auto rounded-xl shadow-lg bg-white top-1/2 transform -translate-y-1/2"
+          class="pt-20 flex flex-col-reverse place-items-center md:flex-row md:pt-28"
         >
-          <div v-if="!isMergeModal">
-            <div class="text-center p-3 flex-auto justify-center leading-6">
-              <p class="text-md text-gray-500 px-8">
-                {{ mergeMessage }}
-              </p>
-            </div>
-            <div class="p-3 mt-2 text-center space-x-4 md:block">
-              <button
-                class="mb-2 md:mb-0 bg-purple-500 border border-purple-500 px-5 py-2 text-sm shadow-sm font-medium tracking-wider text-white rounded-md hover:shadow-lg hover:bg-purple-600"
-                @click="onClickMerge"
-              >
-                Merge
-              </button>
-              <button
-                class="mb-2 md:mb-0 bg-white px-5 py-2 text-sm shadow-sm font-medium tracking-wider border text-gray-600 rounded-md hover:shadow-lg hover:bg-gray-100"
-                @click="isModalVisible = false"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-          <div v-else>
-            <div class="text-center p-3 flex-auto justify-center leading-6">
-              <p class="text-md text-gray-500 px-8">
-                โปรดเลือกเขตที่ต้องการรับข้อมูลจากบัญชีที่ต้องการรวม
-              </p>
-              <div class="text-md text-gray-500 px-8">
-                <div
-                  v-for="(district, index) in districtSubscribe"
-                  :key="index"
+          <btn-component
+            :btn-property="cancelBtn"
+            class="btn py-4 lg:py-0 md:pr-20"
+            @click=";(Mode = 'login'), (alertMsg = '')"
+          />
+          <btn-component
+            :btn-property="resetBtn"
+            class="btn"
+            @click="resetPs()"
+          />
+        </div>
+      </div>
+    </div>
+
+    <transition name="fade">
+      <div v-if="isModalVisible">
+        <div class="absolute bg-black bg-opacity-70 inset-0 z-0">
+          <div
+            class="w-full max-w-lg p-3 relative mx-auto my-auto rounded-xl shadow-lg bg-white top-1/2 transform -translate-y-1/2"
+          >
+            <div v-if="!isMergeModal">
+              <div class="text-center p-3 flex-auto justify-center leading-6">
+                <p class="text-md text-gray-500 px-8">
+                  {{ mergeMessage }}
+                </p>
+              </div>
+              <div class="p-3 mt-2 text-center space-x-4 md:block">
+                <button
+                  class="mb-2 md:mb-0 bg-purple-500 border border-purple-500 px-5 py-2 text-sm shadow-sm font-medium tracking-wider text-white rounded-md hover:shadow-lg hover:bg-purple-600"
+                  @click="onClickMerge"
                 >
-                  <input
-                    :id="district"
-                    v-model="selectedDistrict"
-                    type="checkbox"
-                    :value="district"
-                  />
-                  <label :for="district">{{ district }}</label>
-                </div>
+                  Merge
+                </button>
+                <button
+                  class="mb-2 md:mb-0 bg-white px-5 py-2 text-sm shadow-sm font-medium tracking-wider border text-gray-600 rounded-md hover:shadow-lg hover:bg-gray-100"
+                  @click="isModalVisible = false"
+                >
+                  Cancel
+                </button>
               </div>
             </div>
-            <div class="p-3 mt-2 text-center space-x-4 md:block">
-              <button
-                class="mb-2 md:mb-0 bg-purple-500 border border-purple-500 px-5 py-2 text-sm shadow-sm font-medium tracking-wider text-white rounded-md hover:shadow-lg hover:bg-purple-600"
-                @click="userMerge"
-              >
-                Merge
-              </button>
-              <button
-                class="mb-2 md:mb-0 bg-white px-5 py-2 text-sm shadow-sm font-medium tracking-wider border text-gray-600 rounded-md hover:shadow-lg hover:bg-gray-100"
-                @click="isModalVisible = false"
-              >
-                Cancel
-              </button>
+            <div v-else>
+              <div class="text-center p-3 flex-auto justify-center leading-6">
+                <p class="text-md text-gray-500 px-8">
+                  โปรดเลือกเขตที่ต้องการรับข้อมูลจากบัญชีที่ต้องการรวม
+                </p>
+                <div class="text-md text-gray-500 px-8">
+                  <div
+                    v-for="(district, index) in districtSubscribe"
+                    :key="index"
+                  >
+                    <input
+                      :id="district"
+                      v-model="selectedDistrict"
+                      type="checkbox"
+                      :value="district"
+                    />
+                    <label :for="district">{{ district }}</label>
+                  </div>
+                </div>
+              </div>
+              <div class="p-3 mt-2 text-center space-x-4 md:block">
+                <button
+                  class="mb-2 md:mb-0 bg-purple-500 border border-purple-500 px-5 py-2 text-sm shadow-sm font-medium tracking-wider text-white rounded-md hover:shadow-lg hover:bg-purple-600"
+                  @click="userMerge"
+                >
+                  Merge
+                </button>
+                <button
+                  class="mb-2 md:mb-0 bg-white px-5 py-2 text-sm shadow-sm font-medium tracking-wider border text-gray-600 rounded-md hover:shadow-lg hover:bg-gray-100"
+                  @click="isModalVisible = false"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  </transition>
-      
-</div>
+    </transition>
+  </div>
 </template>
 <style scoped>
 .main {

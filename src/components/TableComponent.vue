@@ -17,6 +17,8 @@ const showContent = ref(5)
 
 const page = ref(1)
 
+const lastSelectedPage = ref()
+
 const url = import.meta.env.PROD ? import.meta.env.VITE_API_URL : "/api"
 
 const start = ref(showContent.value * (page.value - 1))
@@ -33,6 +35,9 @@ const searchResult = ref(0)
 
 function selectedSize(size) {
   showContent.value = size
+  if(page.value > totalPage.value){
+    page.value = totalPage.value
+  }
   start.value = showContent.value * (page.value - 1)
   console.log(start.value)
   end.value = page.value == 1 ? showContent.value : showContent.value * page.value
@@ -41,6 +46,7 @@ function selectedSize(size) {
 }
 
 function selectedPage(pg) {
+  lastSelectedPage.value = pg
   page.value = pg
   start.value = showContent.value * (page.value - 1)
   end.value =
@@ -53,6 +59,8 @@ function changeSelectedValue(selectedValue) {
 
 
 const filteredDistrict = computed(() => {
+  start.value = showContent.value * (page.value - 1)
+  end.value = page.value == 1 ? showContent.value : showContent.value * page.value
   if (search.value == "") {
     return props.columns.slice(start.value, end.value)
   } else if (search.value != "") {
@@ -75,6 +83,15 @@ const totalPage = computed(() => {
   const pageNum = Math.ceil(
       Math.round(search.value == ""? props.columns.length : searchResult.value) / Math.round(showContent.value)
 )
+
+   if(pageNum != 0 && pageNum < page.value){
+    page.value = pageNum
+
+  }else if(pageNum == page.value){
+
+  }else if(lastSelectedPage.value != undefined){
+    page.value = lastSelectedPage.value
+  }
   return pageNum
 
 })
@@ -120,6 +137,7 @@ function confirmChangeStatus(status) {
     window.location.reload()
   }
 }
+
 </script>
 
 <template>
@@ -202,6 +220,7 @@ function confirmChangeStatus(status) {
       </div>
     </div>
     <PaginationComponent
+      :page-selected="page"
       :total-page="totalPage"
       @selected-size="selectedSize"
       @selected-page="selectedPage"

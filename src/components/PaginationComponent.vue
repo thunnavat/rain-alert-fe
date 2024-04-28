@@ -2,7 +2,8 @@
 import { ref, computed } from "vue"
 const emits = defineEmits(["selectedSize", "selectedPage"])
 const props = defineProps({
-  totalPage: { type: Number, default: 1 }
+  totalPage: { type: Number, default: 1 },
+  pageSelected: { type: Number, default: 1}
 })
 const shownTotal = [3, 5, 7]
 const selectedSize = ref(5)
@@ -62,7 +63,7 @@ function navigate(page) {
       <div
         v-for="page in getTotalPage"
         :key="page"
-        :class="Math.round(page) == Math.round(selectedPage) ? 'selected' : ''"
+        :class="Math.round(page) == Math.round(pageSelected) ? 'selected' : ''"
         class="page"
         @click="navigate(page)"
       >
@@ -77,7 +78,7 @@ function navigate(page) {
       <div
         v-for="page in getTotalPage"
         :key="page"
-        :class="Math.round(page) == Math.round(selectedPage) ? 'selected' : ''"
+        :class="Math.round(page) == Math.round(pageSelected) ? 'selected' : ''"
         class="page"
         @click="navigate(page)"
       >
