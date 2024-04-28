@@ -10,10 +10,11 @@ function imageUrl(array){
 </script>
 
 <template>
-  <div class="information-box">
+  <div class="information-box flex flex-col md:flex-row">
     <span
       v-for="(infoBox, index) in infoBoxs"
       :key="index"
+      class="pb-8"
     >
       <div
         v-if="infoBox.value"
@@ -24,7 +25,7 @@ function imageUrl(array){
 
       <div
         v-if="!infoBox.value"
-        class="info"
+        class="info w-auto mx-3 md:w-64"
       >
         <h3>{{ infoBox.district }}</h3>
         <div class="subHeader">{{ infoBox.status }}</div>
@@ -70,20 +71,20 @@ img {
   }
 }
 .information-box {
-  display: flex;
-  margin-right: 3em;
+  /* margin-right: 3em; */
+  flex-wrap: wrap;
   justify-content: center;
-  margin-bottom: 5em;
-  overflow: hidden;
+  /* margin-bottom: 5em; */
+  /* overflow: hidden; */
   border-radius: 10px;
 }
 .info {
   padding: 1px 20px;
-  width: 15em;
+  /* width: 15em; */
   background-image: linear-gradient(rgb(69, 67, 67), black);
   border: thin solid grey;
   border-radius: 10px;
-  margin-left: 2em;
+  /* margin-left: 2em; */
 }
 
 .subHeader {

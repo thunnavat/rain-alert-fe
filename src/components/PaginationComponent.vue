@@ -4,7 +4,6 @@ const emits = defineEmits(["selectedSize", "selectedPage"])
 const props = defineProps({
   totalPage: { type: Number, default: 1 }
 })
-
 const shownTotal = [3, 5, 7]
 const selectedSize = ref(5)
 const selectedPage = ref(1)

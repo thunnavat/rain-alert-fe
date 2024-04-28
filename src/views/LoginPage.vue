@@ -15,25 +15,28 @@ const email = ref("")
 const passWord = ref("")
 const isUpload = ref(false)
 const displayName = ref("")
-let imgData = ref("")
 const rePassWord = ref("")
 const profile = userData()
 const alertMsg = ref("")
-const alertType = ref("")
+const alertType = ref("ERROR")
 const loading = ref(false)
 const isModalVisible = ref(false)
 const mergeMessage = ref("")
 const districtSubscribe = ref([])
 const isMergeModal = ref(false)
 const selectedDistrict = ref([])
+const otp = ref("")
+let imgData = ref("")
+const imgFrom = ref("")
+const selectedPage = ref(1)
 let btnProp = {
   btnName: "Login",
   width: "12em"
 }
 
 let signUpBtn = {
-  ...btnProp,
-  btnName: "Create Account"
+  btnName: "Create Account",
+  width: window.screen.width < 1600 ? "10em" : "12em",
 }
 
 let resetBtn = {
@@ -46,7 +49,16 @@ let cancelBtn = {
   bgColor: "black",
   width: "12em"
 }
+let nextBtn = {
+  btnName: "Next",
+  width: window.screen.width < 1600 ? "10em" : "12em",
+}
 
+let prevBtn = {
+  ...cancelBtn,
+  btnName: "Previous",
+  width: window.screen.width < 1600 ? "10em" : "12em",
+}
 let lineBtn = {
   btnName: "Log in with LINE",
   iconPath: import.meta.env.PROD
@@ -56,8 +68,13 @@ let lineBtn = {
   iconWidth: "40",
   iconHeight: "40",
   bgColor: "#06C755",
-  width: "24rem",
+  width: window.screen.width < 768 ? "65vw" : "24rem",
   height: "3.5rem"
+}
+
+const otpBtn = {
+  btnName: "GET OTP",
+  width: "100%"
 }
 
 const lineLoginUrl =
@@ -68,6 +85,7 @@ const userInfo = ref()
 
 onMounted(() => {
   getInitialProps()
+  console.log(window.screen.width)
 })
 
 const getInitialProps = async () => {
@@ -151,25 +169,41 @@ const getInitialProps = async () => {
 }
 
 function isValidate() {
-  const regExp = new RegExp(/^\S+@\S+\.\S+$/)
+  alertType.value = "ERROR"
+  const regExp = new RegExp(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
+  const passwordRegExp = new RegExp(
+    /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/
+  )
   if (email.value.trim() == "") {
     alertMsg.value = "อีเมลไม่สามารถเว้นว่างได้"
     return false
   } else if (!regExp.test(email.value.trim())) {
     alertMsg.value = "กรุณากรอกอีเมลที่ถูกต้อง"
     return false
-  } else if (
+  }
+  else if (
     passWord.value == "" &&
     (Mode.value == "sign-up" || Mode.value == "login")
   ) {
     alertMsg.value = "รหัสผ่านไม่สามารถเว้นว่างได้"
     return false
   } else if (Mode.value == "sign-up") {
-    if (passWord.value != rePassWord.value) {
+    if (selectedPage.value == 2 && !passwordRegExp.test(passWord.value)) {
+      alertMsg.value =
+        "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร ประกอบด้วยตัวเลข ตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และอักขระพิเศษ"
+      return false
+    }
+    if (selectedPage.value == 2 && passWord.value != rePassWord.value) {
       alertMsg.value = "รหัสผ่านไม่ตรงกัน"
       return false
-    } else if (displayName.value.trim() == "") {
+    } else if (selectedPage.value == 3 && displayName.value.trim() == "") {
       alertMsg.value = "กรุณาใส่ชื่อที่ต้องการเเสดง"
+      return false
+    } else if (selectedPage.value == 4 && otp.value == "") {
+      alertMsg.value = "กรุณากรอกรหัส OTP"
+      return false
+    } else if (selectedPage.value == 4 && otp.value.length != 6) {
+      alertMsg.value = "รหัส OTP ไม่ถูกต้อง"
       return false
     } else {
       return true
@@ -177,6 +211,19 @@ function isValidate() {
   } else {
     return true
   }
+}
+
+function emailValidate() {
+  alertType.value = "ERROR"
+  const regExp = new RegExp(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
+  if (email.value.trim() == "") {
+    alertMsg.value = "อีเมลไม่สามารถเว้นว่างได้"
+    return false
+  } else if (!regExp.test(email.value.trim())) {
+    alertMsg.value = "กรุณากรอกอีเมลที่ถูกต้อง"
+    return false
+  }
+  return true
 }
 
 function login() {
@@ -190,9 +237,9 @@ function login() {
       .catch(function (error) {
         alertMsg.value = error.response.data.message
       })
-      .then(async (res) => {
+      .then(async(res) => {
         localStorage.setItem("access_token", res.data.accessToken)
-        await profile.getProfile()
+        await profile.getProfile() 
         router.push({ name: "Home" })
       })
   }
@@ -213,6 +260,7 @@ function signUp() {
           password: passWord.value,
           displayName: displayName.value.trim(),
           picture: imgData.value != "" ? UploadPicture(imgData.value) : "",
+          otp: otp.value,
           registerType: "WEB"
         },
         headerConfig
@@ -229,11 +277,34 @@ function signUp() {
               password: passWord.value,
               registerType: "WEB"
             })
-            .then(async (res) => {
+            .then(async(res) => {
               localStorage.setItem("access_token", res.data.accessToken)
-              await profile.getProfile()
+              await profile.getProfile() 
               router.push({ name: "Home" })
             })
+        }
+      })
+  }
+}
+
+function getOtp() {
+  alertMsg.value = ""
+  if (emailValidate() == true) {
+    loading.value = true
+    axios
+      .post(`${url}/login/request-email-verification`, {
+        email: email.value
+      })
+      .catch(function (error) {
+        alertMsg.value = error.response.data.message
+        loading.value = false
+        return
+      })
+      .then(() => {
+        if (alertMsg.value == "") {
+          alertMsg.value = "ส่งรหัส OTP ไปยัง Email ของคุณเเล้ว"
+          alertType.value = "SUCCESS"
+          loading.value = false
         }
       })
   }
@@ -249,24 +320,43 @@ function resetPs() {
       .catch(function (error) {
         loading.value = false
         alertMsg.value = error.response.data.message
-        alertType.value = "ERROR"
+        alertType.value = 'ERROR'
       })
       .then(() => {
-        if (alertMsg.value == "") {
+        if(alertMsg.value == ''){
           loading.value = false
-          alertMsg.value = "ส่งอีเมล์ไปยังบัญชีของคุณเเล้ว"
-          alertType.value = "SUCCESS"
+          alertMsg.value = 'ส่งอีเมล์ไปยังบัญชีของคุณเเล้ว'
+          alertType.value = 'SUCCESS'
         }
       })
   }
 }
 
 function CropSuccess(cropData) {
-  imgData.value = cropData
+  if (cropData.target) {
+    const file = cropData.target.files[0]
+    const reader = new FileReader()
+    reader.addEventListener(
+      "load",
+      () => {
+        // convert image file to base64 string
+        imgData.value = reader.result
+        imgFrom.value = "input"
+      },
+      false
+    )
+
+    if (file) {
+      reader.readAsDataURL(file)
+    }
+  } else {
+    imgData.value = cropData
+    imgFrom.value = "crop"
+  }
 }
 
 function UploadPicture(cropData) {
-  const file = dataURLtoFile(cropData, "profile.jpg")
+  const file = dataURLtoFile(cropData, 'profile.jpg')
   return file
 }
 
@@ -280,6 +370,19 @@ function dataURLtoFile(dataurl, filename) {
     u8arr[n] = bstr.charCodeAt(n)
   }
   return new File([u8arr], filename, { type: mime })
+}
+
+function changePage(direction) {
+  alertMsg.value = ''
+  if (direction == "+1") {
+    if (selectedPage.value == 1 && emailValidate()) {
+      selectedPage.value += 1
+    } else if (selectedPage.value > 1 && isValidate()) {
+      selectedPage.value += 1
+    }
+  } else if (direction == "-1") {
+    selectedPage.value -= 1
+  }
 }
 
 const userMerge = async () => {
@@ -332,83 +435,101 @@ const onClickMerge = async () => {
 </script>
 
 <template>
-  <div>
-    <div
-      v-if="Mode == 'login'"
-      class="main"
-    >
-      <div>
-        <img
-          src="../assets/Login_Image.png"
-          alt=""
-          class="max-w-full"
-        />
-      </div>
-
-      <div
-        class="info"
-        :class="Mode == 'login' ? '' : 'altFont w-4/6'"
-      >
-        <div class="btn h-auto max-w-full">
-          <a :href="lineLoginUrl">
-            <btn-component :btn-property="lineBtn" />
-          </a>
-        </div>
-        <alert-component :alert-msg="alertMsg" />
-
-        <div class="formText pt-6">
-          Email <br />
-          <input
-            v-model="email"
-            type="text"
-            required
-            class="textInput"
-            @keypress="alertMsg = ''"
-          />
-        </div>
-        <div class="formText pt-10">
-          Password <br />
-          <input
-            v-model="passWord"
-            type="password"
-            required
-            class="textInput"
-            @keypress="alertMsg = ''"
-          />
-        </div>
-        <div class="pt-10 flex">
-          <btn-component
-            :btn-property="btnProp"
-            class="btn"
-            @click="login()"
-          />
-          <span
-            class="btn altFont pl-7 pt-2"
-            @click="(Mode = 'sign-up'), (alertMsg = '')"
-            >Need to sign up</span
-          >
-        </div>
-        <p
-          class="btn altFont text-center text-[#FF0000]"
-          @click="(Mode = 'fgPass'), (alertMsg = '')"
-        >
-          Forgotten password?
-        </p>
-      </div>
+  <div
+    v-if="Mode == 'login'"
+    class="main"
+  >
+    <div>
+      <img
+        src="../assets/Login_Image.png"
+        alt=""
+        class="image"
+      />
     </div>
+
     <div
-      v-else-if="Mode == 'sign-up'"
-      class="main"
+      class="info"
+      :class="Mode == 'login' ? '' : 'altFont w-4/6'"
     >
-      <div>
-        <img
-          src="../assets/Login_Image.png"
-          alt=""
-          class="max-w-full"
+      <div class="btn h-auto max-w-full">
+        <a :href="lineLoginUrl">
+          <btn-component :btn-property="lineBtn"/>
+        </a>
+      </div>
+      <alert-component :alert-msg="alertMsg" />
+      <div class="formText pt-6">
+        Email <br />
+        <input
+          v-model="email"
+          type="text"
+          required
+          class="textInput"
+          @change="alertMsg = ''"
+          @keypress="alertMsg = ''"
+          placeholder="Enter Your Email Address"
         />
       </div>
-      <div class="info altFont w-4/6">
-        <alert-component :alert-msg="alertMsg" />
+      <div class="formText pt-10">
+        Password <br />
+        <input
+          v-model="passWord"
+          type="password"
+          required
+          class="textInput"
+          @change="alertMsg = ''"
+          @keypress="alertMsg = ''"
+          placeholder="Enter Your Password"
+        />
+      </div>
+
+      <div class="pt-10 flex flex-col place-items-center md:flex-row">
+        <btn-component
+          :btn-property="btnProp"
+          class="btn mb-5 md:mb-0"
+          @click="login()"
+        />
+        <span
+          class="btn altFont md:pl-7 pt-2"
+          @click=";(Mode = 'sign-up'), (alertMsg = '')"
+          >Need to sign up</span
+        >
+      </div>
+      <p
+        class="btn altFont px-5 py-5 border-t border-0 border-solid border-slate-600 md:border-0 md:px-0 md:pt-2 text-center text-[#FF0000]"
+        @click=";(Mode = 'fgPass'), (alertMsg = '')"
+      >
+        Forgotten password?
+      </p>
+    </div>
+  </div>
+  <div
+    v-else-if="Mode == 'sign-up'"
+    class="main"
+  >
+    <div>
+      <img
+        src="../assets/Login_Image.png"
+        alt=""
+        class="image"
+      />
+    </div>
+    <uploadImg
+              v-model="isUpload"
+              lang-type="en"
+              :no-square="true"
+              :img-format="'jpg'"
+              @crop-success="CropSuccess"
+    ></uploadImg>
+    <div class="info altFont md:w-full lg:w-4/6 wrapper flex flex-col justify-between ">
+      <alert-component
+        :alert-msg="alertMsg"
+        :alert-type="alertType"
+        class="w-full"
+      />
+      <div
+        class="slide"
+        :class="selectedPage == 1 ? 'selected' : ''"
+      >
         <div class="formText pt-4">
           Email <br />
           <input
@@ -416,10 +537,31 @@ const onClickMerge = async () => {
             type="text"
             required
             class="textInput"
+            @change="alertMsg = ''"
             @keypress="alertMsg = ''"
+            placeholder="Enter Your Email Address"
           />
         </div>
-        <div class="formText pt-4">
+        <div class="flex justify-center md:justify-end">
+          <btn-component
+          :btn-property="nextBtn"
+          @click="changePage('+1')"
+          class="btn pt-10 mb-5 md:mb-0"
+        />
+        </div>
+
+      </div>
+      <div
+        class=""
+        :class="
+          selectedPage == 2
+            ? 'selected'
+            : selectedPage > 2
+            ? 'slide'
+            : 'complete'
+        "
+      >
+        <div class="formText">
           Password <br />
           <input
             v-model="passWord"
@@ -427,7 +569,24 @@ const onClickMerge = async () => {
             required
             class="textInput"
             @keypress="alertMsg = ''"
+            @change="alertMsg = ''"
+            placeholder="Enter Your Password"
           />
+          <ul class="text-sm">
+            <li :class="passWord.length >= 8 ? 'text-green-600' : ''">
+              อย่างน้อย 8 ตัวอักษร
+            </li>
+            <li :class="/\d/.test(passWord) ? 'text-green-600' : ''">ตัวเลข</li>
+            <li :class="/[A-Z]/.test(passWord) ? 'text-green-600' : ''">
+              ตัวพิมพ์ใหญ่
+            </li>
+            <li :class="/[a-z]/.test(passWord) ? 'text-green-600' : ''">
+              ตัวพิมพ์เล็ก
+            </li>
+            <li :class="/(?=.*[\W_])/.test(passWord) ? 'text-green-600' : ''">
+              อักขระพิเศษ
+            </li>
+          </ul>
         </div>
         <div class="formText pt-4">
           Re-type password <br />
@@ -436,9 +595,34 @@ const onClickMerge = async () => {
             type="password"
             required
             class="textInput"
+            @change="alertMsg = ''"
             @keypress="alertMsg = ''"
+            placeholder="Re-Enter Your Password"
           />
         </div>
+        <div class="flex flex-col md:flex-row-reverse justify-evenly pt-5">
+          <btn-component
+            :btn-property="nextBtn"
+            @click="changePage('+1')"
+            class="py-5 self-center"
+          />
+          <btn-component
+            :btn-property="prevBtn"
+            @click="changePage('-1')"
+            class="pb-5 md:pb-0 self-center"
+          />
+        </div>
+      </div>
+      <div
+        class="slide"
+        :class="
+          selectedPage == 3
+            ? 'selected'
+            : selectedPage > 3
+            ? 'slide'
+            : 'complete'
+        "
+      >
         <div class="formText pt-4">
           DisplayName <br />
           <input
@@ -446,12 +630,30 @@ const onClickMerge = async () => {
             type="text"
             required
             class="textInput"
+            @change="alertMsg = ''"
             @keypress="alertMsg = ''"
+            placeholder="Enter Your Display Name"
           />
         </div>
         <div class="formText pt-6 pb-6">
-          Choose Your Profile Picture<br />
-          <button @click="isUpload = true">upload image</button>
+          Choose Your Profile Picture (Optional)<br />
+          <input
+            id="image-file"
+            type="file"
+            @change="CropSuccess"
+            accept="image/jpg, image/jpeg, image/png, image/gif"
+          /><br />
+          <label
+            for="image-file"
+            class="custom-file-input mb-5 md:hidden"
+            >Upload Image</label
+          >
+          <button
+            @click="isUpload = true"
+            class="hidden md:block"
+          >
+            Upload Image
+          </button>
           <div class="pt-3">
             <img
               v-show="imgData != ''"
@@ -459,79 +661,127 @@ const onClickMerge = async () => {
               style="clip-path: circle(); width: 10em"
               :src="imgData"
               alt="NO IMAGE CHOSEN"
-              @click="isUpload = true"
+              @click="imgFrom == 'crop' ? (isUpload = true) : ''"
             />
-            <uploadImg
-              v-model="isUpload"
-              lang-type="en"
-              :no-square="true"
-              :img-format="'jpg'"
-              :width="'500'"
-              :height="'500'"
-              @crop-success="CropSuccess"
-            ></uploadImg>
+            
           </div>
+          <div class="btn text-red-600 border border-solid p-1 text-center " @click="imgData = ''" v-show="imgData != ''">Remove Image</div>
         </div>
-        <div class="py-8 flex">
+        <div class="flex flex-col md:flex-row-reverse justify-evenly pt-5">
           <btn-component
+            :btn-property="nextBtn"
+            @click="changePage('+1')"
+            class="py-5 self-center"
+          />
+          <btn-component
+            :btn-property="prevBtn"
+            @click="changePage('-1')"
+            class="pb-5 md:pb-0 self-center"
+          />
+        </div>
+      </div>
+      <div class="slide" :class="
+          selectedPage == 4
+            ? 'selected'
+            : selectedPage > 4
+            ? 'slide'
+            : 'complete'
+        ">
+        <div class="flex flex-col pt-5">
+          <btn-component
+            v-if="loading == false"
+            :btn-property="otpBtn"
+            @click="getOtp()"
+            class=""
+          />
+          <loading-component
+            :size="'12px'"
+            v-else-if="loading == true"
+          />
+          <input
+          type="text"
+          maxlength="6"
+          class="textInput pt-4"
+          pattern="\d*"
+          v-model="otp"
+          placeholder="OTP Verification Code"
+          @change="alertMsg = ''"
+          @keypress="alertMsg = ''"
+        />
+          <div class="flex flex-col md:flex-row-reverse justify-evenly pt-5">
+            <btn-component
             :btn-property="signUpBtn"
-            class="btn"
+            class="btn mb-5 md:mb-0 self-center"
             @click="signUp()"
           />
-          <span
-            class="btn altFont pl-7 pt-2"
-            @click="(Mode = 'login'), (alertMsg = '')"
-            >I already have account</span
-          >
-        </div>
-      </div>
-    </div>
-    <div
-      v-else-if="Mode == 'fgPass'"
-      class="main"
-    >
-      <div>
-        <img
-          src="../assets/Login_Image.png"
-          alt=""
-          class="max-w-full"
-        />
-      </div>
-      <div class="info altFont w-4/6 self-center">
-        <loading-component
-          v-show="loading"
-          class="h-0"
-        />
-        <alert-component
-          :alert-msg="alertMsg"
-          :alert-type="alertType"
-        />
-        <div class="formText">
-          Email <br />
-          <input
-            v-model="email"
-            type="text"
-            required
-            class="textInput"
-            @keypress="alertMsg = ''"
-          />
-        </div>
-        <div class="pt-28 flex">
           <btn-component
-            :btn-property="cancelBtn"
-            class="btn pr-20"
-            @click="(Mode = 'login'), (alertMsg = '')"
-          />
-          <btn-component
-            :btn-property="resetBtn"
-            class="btn"
-            @click="resetPs()"
+            :btn-property="prevBtn"
+            @click="changePage('-1')"
+            class="pb-5 md:pb-0 self-center"
           />
         </div>
+        </div>
+        <div
+          class="py-8 flex flex-col place-items-center lg:flex-row lg:mb-3"
+        ></div>
+
       </div>
+
+      <span
+        class="btn altFont lg:pl-7 py-5 border-t border-0 border-solid border-slate-600 md:border-0 md:px-0 md:pt-2 text-center"
+        @click=";(Mode = 'login'), (alertMsg = '')"
+        >I already have account</span
+      >
     </div>
   </div>
-  <div>
+  <div
+    v-else-if="Mode == 'fgPass'"
+    class="main"
+  >
+    <div>
+      <img
+        src="../assets/Login_Image.png"
+        alt=""
+        class="image"
+      />
+    </div>
+    <div class="info altFont self-center md:w-4/6">
+      <loading-component
+        class="h-0"
+        v-show="loading"
+      />
+      <alert-component
+        :alert-msg="alertMsg"
+        :alert-type="alertType"
+      />
+
+      <div class="formText">
+        Email <br />
+        <input
+          v-model="email"
+          type="text"
+          required
+          class="textInput"
+          @change="alertMsg = ''"
+          @keypress="alertMsg = ''"
+          placeholder="Enter Your Email Address"
+        />
+      </div>
+      <div
+        class="pt-20 flex flex-col-reverse place-items-center md:flex-row md:pt-28"
+      >
+        <btn-component
+          :btn-property="cancelBtn"
+          class="btn py-4 lg:py-0 md:pr-20"
+          @click=";(Mode = 'login'), (alertMsg = '')"
+        />
+        <btn-component
+          :btn-property="resetBtn"
+          class="btn"
+          @click="resetPs()"
+        />
+      </div>
+    </div>
     <transition name="fade">
       <div v-if="isModalVisible">
         <div class="absolute bg-black bg-opacity-70 inset-0 z-0">
@@ -598,16 +848,17 @@ const onClickMerge = async () => {
         </div>
       </div>
     </transition>
-  </div>
+    </div>
 </template>
 <style scoped>
 .main {
   margin: auto;
   background-color: #171717;
   border-radius: 10px;
-  width: 60%;
-  display: flex;
+  /* width: 60%; */
+  /* display: flex; */
   justify-content: space-between;
+  @apply w-full xl:w-3/5 md:flex;
 }
 
 .info {
@@ -616,13 +867,14 @@ const onClickMerge = async () => {
 }
 
 .textInput {
-  width: 100%;
+  /* width: 100%; */
   height: 2em;
   border: none;
-  border-bottom: 1px solid black;
+  border-bottom: 1px solid whitesmoke;
   background-color: #171717;
-  margin-left: 1em;
+  /* margin-left: 1em; */
   transition: border 200ms ease-out;
+  @apply w-full;
 }
 
 .textInput:focus {
@@ -655,11 +907,50 @@ input:-webkit-autofill:active {
   @apply text-2xl font-normal;
 }
 
+.image {
+  @apply max-w-full hidden md:block;
+}
+
+input[type="file"] {
+  display: none;
+}
+
+.custom-file-input {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.4em 0.8em;
+  font-size: 0.9em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #383838;
+}
+
+.wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.slide {
+  position: absolute;
+  transform: translateX(-500%);
+  transition: 0.7s;
+}
+
+.selected {
+  position: relative;
+  transition: 0.7s;
+  transform: translateX(0%);
+}
+
+.complete {
+  position: absolute;
+  transform: translateX(500%);
+  transition: 0.7s;
+}
 .fade-enter,
 .fade-leave-to {
   opacity: 0;
 }
-
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 500ms ease-out;

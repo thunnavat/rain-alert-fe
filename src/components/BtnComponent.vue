@@ -35,6 +35,15 @@ function imageUrl(){
   background-color: #484848;
 }
 
+@media screen and (max-width: 767px) {
+  .default {
+    display: flex;
+    align-items: center;
+    white-space: pre-line;
+    color: white;
+    background-color: #484848;
+  }
+}
 
 .login:hover {
   animation: move 0.15s 2 alternate;

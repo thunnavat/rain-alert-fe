@@ -2,6 +2,7 @@
 import { ref, computed } from "vue"
 import PaginationComponent from "./PaginationComponent.vue"
 import DropDownComponent from "./DropDownComponent.vue"
+import axios from "axios"
 const emits = defineEmits(["selectedValue", "sortBy", "selectedStatus"])
 
 const props = defineProps({
@@ -16,27 +17,27 @@ const showContent = ref(5)
 
 const page = ref(1)
 
+const url = import.meta.env.PROD ? import.meta.env.VITE_API_URL : "/api"
+
 const start = ref(showContent.value * (page.value - 1))
+const changeStatusList = ref([])
 
 const end = ref(
   page.value == 1 ? showContent.value : showContent.value * page.value
 )
 
+const searchResult = ref(0)
+
 // const totalPage = ref(Math.ceil(Math.round(props.columns.length) / Math.round(showContent.value)))
-const totalPage = computed(() => {
-  return Math.ceil(
-    Math.round(props.columns.length) / Math.round(showContent.value)
-  )
-})
+
 
 function selectedSize(size) {
   showContent.value = size
   start.value = showContent.value * (page.value - 1)
-  end.value =
-    page.value == 1 ? showContent.value : showContent.value * page.value
-  totalPage.value = Math.ceil(
-    Math.round(props.columns.length) / Math.round(showContent.value)
-  )
+  console.log(start.value)
+  end.value = page.value == 1 ? showContent.value : showContent.value * page.value
+  console.log(end.value)
+  
 }
 
 function selectedPage(pg) {
@@ -50,18 +51,32 @@ function changeSelectedValue(selectedValue) {
   emits("selectedValue", selectedValue)
 }
 
+
 const filteredDistrict = computed(() => {
   if (search.value == "") {
     return props.columns.slice(start.value, end.value)
   } else if (search.value != "") {
+    searchResult.value = 0
     return props.columns
       .filter((col) => {
-        return col.district.toLowerCase().includes(search.value.toLowerCase())
+        if(col.district.toLowerCase().includes(search.value.toLowerCase())){
+          searchResult.value++
+          return col.district.toLowerCase()
+        }
       })
       .slice(start.value, end.value)
   }
 
   return ""
+})
+console.log(filteredDistrict.value)
+
+const totalPage = computed(() => {
+  const pageNum = Math.ceil(
+      Math.round(search.value == ""? props.columns.length : searchResult.value) / Math.round(showContent.value)
+)
+  return pageNum
+
 })
 
 function sortBy(sorted) {
@@ -70,6 +85,40 @@ function sortBy(sorted) {
 
 function selectedStatus(selectStatus) {
   emits("selectedStatus", selectStatus)
+}
+
+function changeStatus(status, id) {
+  changeStatusList.value.push({status: status, id: id})
+  const removeDuplicate = (list) => list.id == id
+  const duplicate = changeStatusList.value.findIndex(removeDuplicate)
+  console.log(duplicate)
+  console.log(changeStatusList.value[0].id)
+  if(duplicate != changeStatusList.value.length - 1){
+    changeStatusList.value.splice(duplicate, 1)
+  }
+
+}
+
+function confirmChangeStatus(status) {
+  if(status == 'confirm'){
+    for(let i = 0; i < changeStatusList.value.length; i++){
+      axios.put(`${url}/admin/updateRainStatus`, { 
+        rainStatus: changeStatusList.value[i].status,
+        _id: changeStatusList.value[i].id
+      },
+      {
+        headers: {
+        'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+        }
+      }
+    )
+    window.location.reload();
+  }
+  }
+  else if(status == 'discard'){
+    changeStatusList.value = []
+    window.location.reload()
+  }
 }
 </script>
 
@@ -98,6 +147,11 @@ function selectedStatus(selectStatus) {
             :type="'dropdown'"
             @selected-value="changeSelectedValue"
           />
+        </div>
+        <div v-if="changeStatusList.length != 0" class="pt-5 ">
+          <span>Do You Want To Save This Change? </span> <br />
+          <button class="bg-green-700 mt-2 mr-5" @click="confirmChangeStatus('confirm')">Confirm</button>
+          <button class="bg-red-700" @click="confirmChangeStatus('discard')">Discard</button>
         </div>
       </div>
     </div>
@@ -129,14 +183,21 @@ function selectedStatus(selectStatus) {
         <div
           v-for="(col, i) in filteredDistrict"
           :key="i"
-          class="pt-4 pb-4 my-5 px-14 rounded-xl text-base"
+          class="pt-4 pb-4 my-5 px-14 rounded-xl text-base "
           :class="
             col[header.toLowerCase()] == col.status
               ? col[header.toLowerCase()].replace(/\s+/g, '-').toLowerCase()
               : ''
           "
         >
-          {{ col[header.toLowerCase()] }}
+        {{ col[(header.toLowerCase() == 'district'? 'district' : header.toLowerCase() == 'status' ? 'status' : '')] }}
+        <select name="" id="" v-if="header.toLowerCase() == 'change status'" @change="changeStatus($event.target.value, col.id)">
+          <option :selected=" col.status.toLowerCase() == 'no rain'">No Rain</option>
+          <option :selected=" col.status.toLowerCase() == 'light rain'">Light Rain</option>
+          <option :selected=" col.status.toLowerCase() == 'moderate rain'">Moderate Rain</option>
+          <option :selected=" col.status.toLowerCase() == 'heavy rain'">Heavy Rain</option>
+        </select>
+        
         </div>
       </div>
     </div>
@@ -179,33 +240,8 @@ function selectedStatus(selectStatus) {
   padding-top: 1em;
 }
 
-select {
-  background-image: url(../assets/DropdownIcon.svg);
-  background-size: 33px;
-  background-repeat: no-repeat;
-  background-position: calc(100% - 0.25rem);
-  appearance: none;
-}
 
-select:focus {
-  outline: none;
-  background-size: 33px;
-  background-repeat: no-repeat;
-  background-position: calc(100% - 0.25rem);
-  appearance: none;
-}
 
-select:focus {
-  outline: none;
-  background-size: 33px;
-  background-repeat: no-repeat;
-  background-position: calc(100% - 0.25rem);
-  appearance: none;
-}
-
-select:focus {
-  outline: none;
-}
 
 .heavy-rain {
   color: #f01c1c;
@@ -226,4 +262,6 @@ select:focus {
   color: #4e7fdf;
   background: linear-gradient(to bottom, #353535 4em, transparent 0);
 }
+
+
 </style>

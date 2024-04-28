@@ -4,22 +4,27 @@ import TableComponent from "../components/TableComponent.vue"
 import LoadingComponent from "../components/LoadingComponent.vue"
 import { ref, onBeforeMount } from "vue"
 import moment from "moment"
+import { userData } from "../store/userData"
 
-localStorage.setItem('page', 'Rain Fall')
+localStorage.setItem("page", "Rain Fall")
 
-const url = import.meta.env.PROD ?  import.meta.env.VITE_API_URL : '/api'
+const url = import.meta.env.PROD ? import.meta.env.VITE_API_URL : "/api"
 const headers = ["DISTRICT", "Status"]
 const options = ref()
 const sort = ref()
 const selectedVal = ref()
 const selectedStatus = ref("all")
 const isLoading = ref(true)
+const profile = userData()
 
 onBeforeMount(() => {
   getTimes()
   getReports().then(() => {
     isLoading.value = false
   })
+  if (profile.getUserData.role == "ADMIN") {
+    headers.push("Change Status")
+  }
 })
 
 const reports = ref([])
@@ -36,27 +41,44 @@ const getReports = async (reportTime, sorted, selectedStatus) => {
       }${sorted ? "&sort=distinctname," + sorted : ""}`
     )
     .then((res) => {
+      const reportsData = ref([])
       for (let i in res.data) {
-        reports.value.push({
+        reportsData.value.push({
           district: res.data[i].reportDistrict.districtName,
-          status: res.data[i].rainStatus
+          status: res.data[i].rainStatus,
+          id: res.data[i]._id
         })
+      }
+      console.log(sorted)
+      function filterReport(status) {
+        const reportStatus = reportsData.value.filter(
+          (report) => report.status.toLowerCase() == status.toLowerCase()
+        )
+        return reportStatus
+      }
+      if(sorted == undefined){
+        reports.value.push(
+          ...filterReport("heavy rain"),
+          ...filterReport("moderate rain"),
+          ...filterReport("light rain"),
+          ...filterReport("no rain")
+        )
+      }else {
+        reports.value = reportsData.value
       }
     })
 }
 
 const getTimes = () => {
-  const Times = axios
-    .get(`${url}/reports/time`)
-    .then((res) => {
-      options.value = []
-      for (let i in res.data) {
-        options.value.push(
-          moment.utc(res.data[i].reportTime).local().format("DD MMMM YYYY HH:mm")
-        )
-      }
-      return res.data
-    })
+  const Times = axios.get(`${url}/reports/time`).then((res) => {
+    options.value = []
+    for (let i in res.data) {
+      options.value.push(
+        moment.utc(res.data[i].reportTime).local().format("DD MMMM YYYY HH:mm")
+      )
+    }
+    return res.data
+  })
   return Times
 }
 
@@ -66,11 +88,10 @@ function selectedValue(selected) {
 }
 
 function sortBy(sorted) {
-  if(sorted == "asc" || sorted == "desc"){
+  if (sorted == "asc" || sorted == "desc") {
     sort.value = sorted
-  }
-  else if(sorted == "classic"){
-    sort.value = "asc"
+  } else if (sorted == "classic") {
+    sort.value = undefined
   }
   doGetReport()
 }
@@ -87,8 +108,8 @@ function doGetReport() {
 
 <template>
   <div>
-    <loading-component v-if="isLoading == true"/>
-    <TableComponent 
+    <loading-component v-if="isLoading == true" />
+    <TableComponent
       v-if="isLoading == false"
       :options="options"
       :headers="headers"
