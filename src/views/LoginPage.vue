@@ -156,6 +156,14 @@ const getInitialProps = async () => {
         })
     }
   } catch (error) {
+    if (
+      error.response.status === 400 &&
+      error.response.data.message ===
+        "อีเมลนี้ได้ลงทะเบียนกับระบบไว้แล้ว คุณต้องการรวมบัญชีหรือไม่"
+    ) {
+      mergeMessage.value = error.response.data.message
+      isModalVisible.value = true
+    }
     console.error(error)
   }
 }
@@ -374,6 +382,54 @@ function changePage(direction) {
     }
   } else if (direction == "-1") {
     selectedPage.value -= 1
+  }
+}
+
+const userMerge = async () => {
+  try {
+    await axios
+      .post(`${url}/users/userMerge`, {
+        lineId: userInfo.value.profile.sub,
+        email: userInfo.value.profile.email,
+        displayName: userInfo.value.profile.name,
+        picture: userInfo.value.profile.picture,
+        districtSubscribe: selectedDistrict.value
+      })
+      .then(async () => {
+        await axios
+            .post(`${url}/login`, {
+              lineId: userInfo.value.profile.sub,
+              channelId: userInfo.value.profile.aud,
+              registerType: "LINE"
+            })
+            .then((res) => {
+              localStorage.setItem("access_token", res.data.accessToken)
+              localStorage.setItem("page", "Home")
+              profile.getProfile()
+              router.push({ name: "Home" })
+            })
+      })
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+const onClickMerge = async () => {
+  try {
+    await axios
+      .post(`${url}/users/districtSubscribe`, {
+        email: userInfo.value.profile.email
+      })
+      .then((res) => {
+        districtSubscribe.value = res.data.districtSubscribe
+      })
+    if (districtSubscribe.value.length > 0) {
+      isMergeModal.value = true
+    } else {
+      userMerge()
+    }
+  } catch (error) {
+    console.error(error)
   }
 }
 </script>
@@ -890,5 +946,13 @@ input[type="file"] {
   position: absolute;
   transform: translateX(500%);
   transition: 0.7s;
+}
+.fade-enter,
+.fade-leave-to {
+  opacity: 0;
+}
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 500ms ease-out;
 }
 </style>
