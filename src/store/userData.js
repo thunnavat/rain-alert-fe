@@ -16,6 +16,7 @@ export const userData = defineStore("data", {
     notificationByEmail: false,
     role: "",
     loginStatus: false,
+    registerType: "",
   }),
   persist: true,
   getters: {
@@ -60,7 +61,7 @@ export const userData = defineStore("data", {
       notifyToken,
       notificationByLine,
       notificationByEmail,
-      role
+      role,
     ) {
       this.userId = userId
       this.email = email
@@ -90,6 +91,7 @@ export const userData = defineStore("data", {
         this.notifyToken = data.notifyToken
         this.notificationByLine = data.notificationByLine
         this.notificationByEmail = data.notificationByEmail
+        this.registerType = data.registerType
     },
     setProvince(province) {
       this.districtSubscribed.push(province)

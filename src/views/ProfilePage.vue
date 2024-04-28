@@ -12,7 +12,6 @@ import AlertComponent from "../components/AlertComponent.vue"
 localStorage.setItem("page", "Profile")
 
 const notifyText = ref("")
-const GetNotified = ref(false)
 const url = import.meta.env.PROD ? import.meta.env.VITE_API_URL : "/api"
 notifyText.value = "Need Line or Email Notification"
 const navNames = ["Preference"]
@@ -26,10 +25,11 @@ const reNewPass = ref("")
 const alertMsg = ref("")
 const alertType = ref("ERROR")
 
+
 onMounted(() => {
   navSelected.value = "Preference"
   profile.getProfile()
-  if (profile.picture == null || !profile.picture.includes("line")) {
+  if (profile.registerType == 'WEB') {
     navNames.push("Change Password")
   }
   imageUrl.value =

@@ -6,6 +6,7 @@ import axios from "axios"
 
 const profile = userData()
 const reports = ref()
+const alertMsg = ref()
 const role = profile.getUserData.role
 const no_image =  import.meta.env.PROD ? import.meta.env.VITE_IMAGE_PATH + "No_image_available.png": "/No_image_available.png"
 const url = import.meta.env.PROD ? import.meta.env.VITE_API_URL : "/api"
@@ -20,6 +21,28 @@ onMounted(() => {
       reports.value = res.data
     })
 })
+function removeReport(id) {
+  console.log(id)
+  const headers = {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`
+        }
+  const data = {
+    _id: id
+  }
+  axios
+  .delete(
+      `${url}/admin/deleteBugReport`,
+      {
+        headers: headers,
+        data: data
+      }
+    ).catch(function (error) {
+        alertMsg.value = error.response.data.message
+      })
+    .then(() => {
+      window.location.reload()
+    })
+}
 </script>
 
 <template>
@@ -38,6 +61,7 @@ onMounted(() => {
       <div
         class="max-w-sm bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 p-5"
       >
+      <button class="bg-red-600 block" @click="removeReport(report._id)">X</button>
       Number: {{ index + 1 }}
       <div class="p-5">NOTE : {{ report.note }}</div>
         <img
