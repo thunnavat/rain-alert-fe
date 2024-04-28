@@ -435,6 +435,8 @@ const onClickMerge = async () => {
 </script>
 
 <template>
+  <div>
+
   <div
     v-if="Mode == 'login'"
     class="main"
@@ -782,73 +784,76 @@ const onClickMerge = async () => {
         />
       </div>
     </div>
-    <transition name="fade">
-      <div v-if="isModalVisible">
-        <div class="absolute bg-black bg-opacity-70 inset-0 z-0">
-          <div
-            class="w-full max-w-lg p-3 relative mx-auto my-auto rounded-xl shadow-lg bg-white top-1/2 transform -translate-y-1/2"
-          >
-            <div v-if="!isMergeModal">
-              <div class="text-center p-3 flex-auto justify-center leading-6">
-                <p class="text-md text-gray-500 px-8">
-                  {{ mergeMessage }}
-                </p>
-              </div>
-              <div class="p-3 mt-2 text-center space-x-4 md:block">
-                <button
-                  class="mb-2 md:mb-0 bg-purple-500 border border-purple-500 px-5 py-2 text-sm shadow-sm font-medium tracking-wider text-white rounded-md hover:shadow-lg hover:bg-purple-600"
-                  @click="onClickMerge"
-                >
-                  Merge
-                </button>
-                <button
-                  class="mb-2 md:mb-0 bg-white px-5 py-2 text-sm shadow-sm font-medium tracking-wider border text-gray-600 rounded-md hover:shadow-lg hover:bg-gray-100"
-                  @click="isModalVisible = false"
-                >
-                  Cancel
-                </button>
-              </div>
+  </div>
+  
+  <transition name="fade">
+    <div v-if="isModalVisible">
+      <div class="absolute bg-black bg-opacity-70 inset-0 z-0">
+        <div
+          class="w-full max-w-lg p-3 relative mx-auto my-auto rounded-xl shadow-lg bg-white top-1/2 transform -translate-y-1/2"
+        >
+          <div v-if="!isMergeModal">
+            <div class="text-center p-3 flex-auto justify-center leading-6">
+              <p class="text-md text-gray-500 px-8">
+                {{ mergeMessage }}
+              </p>
             </div>
-            <div v-else>
-              <div class="text-center p-3 flex-auto justify-center leading-6">
-                <p class="text-md text-gray-500 px-8">
-                  โปรดเลือกเขตที่ต้องการรับข้อมูลจากบัญชีที่ต้องการรวม
-                </p>
-                <div class="text-md text-gray-500 px-8">
-                  <div
-                    v-for="(district, index) in districtSubscribe"
-                    :key="index"
-                  >
-                    <input
-                      :id="district"
-                      v-model="selectedDistrict"
-                      type="checkbox"
-                      :value="district"
-                    />
-                    <label :for="district">{{ district }}</label>
-                  </div>
+            <div class="p-3 mt-2 text-center space-x-4 md:block">
+              <button
+                class="mb-2 md:mb-0 bg-purple-500 border border-purple-500 px-5 py-2 text-sm shadow-sm font-medium tracking-wider text-white rounded-md hover:shadow-lg hover:bg-purple-600"
+                @click="onClickMerge"
+              >
+                Merge
+              </button>
+              <button
+                class="mb-2 md:mb-0 bg-white px-5 py-2 text-sm shadow-sm font-medium tracking-wider border text-gray-600 rounded-md hover:shadow-lg hover:bg-gray-100"
+                @click="isModalVisible = false"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+          <div v-else>
+            <div class="text-center p-3 flex-auto justify-center leading-6">
+              <p class="text-md text-gray-500 px-8">
+                โปรดเลือกเขตที่ต้องการรับข้อมูลจากบัญชีที่ต้องการรวม
+              </p>
+              <div class="text-md text-gray-500 px-8">
+                <div
+                  v-for="(district, index) in districtSubscribe"
+                  :key="index"
+                >
+                  <input
+                    :id="district"
+                    v-model="selectedDistrict"
+                    type="checkbox"
+                    :value="district"
+                  />
+                  <label :for="district">{{ district }}</label>
                 </div>
               </div>
-              <div class="p-3 mt-2 text-center space-x-4 md:block">
-                <button
-                  class="mb-2 md:mb-0 bg-purple-500 border border-purple-500 px-5 py-2 text-sm shadow-sm font-medium tracking-wider text-white rounded-md hover:shadow-lg hover:bg-purple-600"
-                  @click="userMerge"
-                >
-                  Merge
-                </button>
-                <button
-                  class="mb-2 md:mb-0 bg-white px-5 py-2 text-sm shadow-sm font-medium tracking-wider border text-gray-600 rounded-md hover:shadow-lg hover:bg-gray-100"
-                  @click="isModalVisible = false"
-                >
-                  Cancel
-                </button>
-              </div>
+            </div>
+            <div class="p-3 mt-2 text-center space-x-4 md:block">
+              <button
+                class="mb-2 md:mb-0 bg-purple-500 border border-purple-500 px-5 py-2 text-sm shadow-sm font-medium tracking-wider text-white rounded-md hover:shadow-lg hover:bg-purple-600"
+                @click="userMerge"
+              >
+                Merge
+              </button>
+              <button
+                class="mb-2 md:mb-0 bg-white px-5 py-2 text-sm shadow-sm font-medium tracking-wider border text-gray-600 rounded-md hover:shadow-lg hover:bg-gray-100"
+                @click="isModalVisible = false"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>
       </div>
-    </transition>
     </div>
+  </transition>
+      
+</div>
 </template>
 <style scoped>
 .main {
