@@ -26,21 +26,18 @@ const end = ref(
   page.value == 1 ? showContent.value : showContent.value * page.value
 )
 
+const searchResult = ref(0)
+
 // const totalPage = ref(Math.ceil(Math.round(props.columns.length) / Math.round(showContent.value)))
-const totalPage = computed(() => {
-  return Math.ceil(
-    Math.round(props.columns.length) / Math.round(showContent.value)
-  )
-})
+
 
 function selectedSize(size) {
   showContent.value = size
   start.value = showContent.value * (page.value - 1)
-  end.value =
-    page.value == 1 ? showContent.value : showContent.value * page.value
-  totalPage.value = Math.ceil(
-    Math.round(props.columns.length) / Math.round(showContent.value)
-  )
+  console.log(start.value)
+  end.value = page.value == 1 ? showContent.value : showContent.value * page.value
+  console.log(end.value)
+  
 }
 
 function selectedPage(pg) {
@@ -54,18 +51,32 @@ function changeSelectedValue(selectedValue) {
   emits("selectedValue", selectedValue)
 }
 
+
 const filteredDistrict = computed(() => {
   if (search.value == "") {
     return props.columns.slice(start.value, end.value)
   } else if (search.value != "") {
+    searchResult.value = 0
     return props.columns
       .filter((col) => {
-        return col.district.toLowerCase().includes(search.value.toLowerCase())
+        if(col.district.toLowerCase().includes(search.value.toLowerCase())){
+          searchResult.value++
+          return col.district.toLowerCase()
+        }
       })
       .slice(start.value, end.value)
   }
 
   return ""
+})
+console.log(filteredDistrict.value)
+
+const totalPage = computed(() => {
+  const pageNum = Math.ceil(
+      Math.round(search.value == ""? props.columns.length : searchResult.value) / Math.round(showContent.value)
+)
+  return pageNum
+
 })
 
 function sortBy(sorted) {
@@ -181,10 +192,10 @@ function confirmChangeStatus(status) {
         >
         {{ col[(header.toLowerCase() == 'district'? 'district' : header.toLowerCase() == 'status' ? 'status' : '')] }}
         <select name="" id="" v-if="header.toLowerCase() == 'change status'" @change="changeStatus($event.target.value, col.id)">
-          <option :selected=" col.status == 'No Rain'">No Rain</option>
-          <option :selected=" col.status == 'Light Rain'">Light Rain</option>
-          <option :selected=" col.status == 'Moderate Rain'">Moderate Rain</option>
-          <option :selected=" col.status == 'Heavy Rain'">Heavy Rain</option>
+          <option :selected=" col.status.toLowerCase() == 'no rain'">No Rain</option>
+          <option :selected=" col.status.toLowerCase() == 'light rain'">Light Rain</option>
+          <option :selected=" col.status.toLowerCase() == 'moderate rain'">Moderate Rain</option>
+          <option :selected=" col.status.toLowerCase() == 'heavy rain'">Heavy Rain</option>
         </select>
         
         </div>

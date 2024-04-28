@@ -30,6 +30,9 @@ const url = import.meta.env.PROD ? import.meta.env.VITE_API_URL : "/api"
 const iconPath = import.meta.env.PROD ? import.meta.env.VITE_IMAGE_PATH + "rain-status/" : "/rain-status/";
 async function getRandom() {
   for (random.value; random.value.length <= 3; ) {
+    if(profile.districtSubscribed && profile.districtSubscribed.length != 0){
+
+    }
     const randomNum = Math.floor(Math.random() * (49 - 0 + 1) )
     if (!random.value.includes(randomNum)) {
       random.value.push(randomNum)
@@ -40,6 +43,8 @@ async function getRandom() {
 
 const getReports = async (reportTime) => {
   favorites.value = []
+  const favoriteDistrict = ref([])
+  favoriteDistrict.value.push(...profile.districtSubscribed)
   const randoms = await getRandom()
   const time = await getTimes()
   const modifiedTime = reportTime
@@ -50,18 +55,58 @@ const getReports = async (reportTime) => {
     for(let i = 0; i < res.data.length; i++) {
       data.value.push(res.data[i])
     }
-    console.log(res.data)
+    const favoriteLength = favoriteDistrict.value.length
+    const districtReport = ref([])
+    
+    function filterReport(status) {
+        const reportStatus = favoriteDistrict.value.filter(
+          (report) =>  report.rainStatus.toLowerCase() == status.toLowerCase()
+        )
+        return reportStatus
+      }
+    for(let i = 0; i < favoriteLength; i++){
+      const favoriteIndex = data.value.findIndex((data) => data.reportDistrict.districtName.toLowerCase() == favoriteDistrict.value[i].toLowerCase())
+      districtReport.value.push(data.value[favoriteIndex])
+      if(i == favoriteLength - 1) {
+        favoriteDistrict.value = districtReport.value
+        districtReport.value = []
+        districtReport.value.push(
+          ...filterReport("heavy rain"),
+          ...filterReport("moderate rain"),
+          ...filterReport("light rain"),
+          ...filterReport("no rain")
+        )
+      }
+    }
+   
     for (let i = 0; i < 4; i++) {
-      favorites.value.push({
-        district: res.data[randoms[i]].reportDistrict.districtName,
+      if(favoriteDistrict.value.length != 0 && profile.loginStatus == true){
+        const index = data.value.findIndex((report) => report.reportDistrict == districtReport.value[i].reportDistrict)
+        favorites.value.push({
+        district: districtReport.value[i].reportDistrict.districtName,
         status:
-          res.data[randoms[i]].rainStatus.charAt(0) +
-          res.data[randoms[i]].rainStatus.slice(1).toLowerCase(),
+        districtReport.value[i].rainStatus.charAt(0) +
+        districtReport.value[i].rainStatus.slice(1).toLowerCase(),
         icon:
           iconPath +
-          res.data[randoms[i]].rainStatus.replace(/\s+/g, "-").toLowerCase() +
+          districtReport.value[i].rainStatus.replace(/\s+/g, "-").toLowerCase() +
           ".svg"
       })
+      favoriteDistrict.value.splice(0, 1)
+      data.value.splice(index, 1)
+      }else {
+        favorites.value.push({
+          district: res.data[randoms[i]].reportDistrict.districtName,
+          status:
+            res.data[randoms[i]].rainStatus.charAt(0) +
+            res.data[randoms[i]].rainStatus.slice(1).toLowerCase(),
+          icon:
+            iconPath +
+            res.data[randoms[i]].rainStatus.replace(/\s+/g, "-").toLowerCase() +
+            ".svg"
+        })
+
+      }
     }
   })
 }

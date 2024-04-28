@@ -36,12 +36,12 @@ function sortDistrict(sortBy) {
 }
 const districts = [
   {
-    name: "Nong Khaem",
+    name: "Thawi Watthana",
     coords:
       "22,684,24,723,22,838,29,861,31,901,42,969,142,960,119,901,201,890,268,899,332,910,354,754,352,689"
   },
   {
-    name: "Thawi Wattana",
+    name: "Nong Khaem",
     coords:
       "47,973,58,1070,38,1077,39,1100,31,1116,50,1210,75,1273,64,1309,111,1303,146,1281,250,1234,239,1158,143,957"
   },

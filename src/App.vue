@@ -13,7 +13,6 @@ let navNames = ref(["Home", "Rain Fall", "Subscribe"])
 
 onMounted(() => {
   profile.getLoginStatus
-  console.log(localStorage.getItem('page'))
   if(profile.getUserData.exp != undefined){
     setTimeout(() => {
       alert("Time Out Please Log In Again")
