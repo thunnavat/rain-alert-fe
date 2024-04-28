@@ -10,7 +10,7 @@ function imageUrl(array){
 </script>
 
 <template>
-  <div class="information-box flex flex-col md:flex-row">
+  <div class="information-box flex flex-wrap md:flex-row">
     <span
       v-for="(infoBox, index) in infoBoxs"
       :key="index"
@@ -25,7 +25,7 @@ function imageUrl(array){
 
       <div
         v-if="!infoBox.value"
-        class="info w-auto mx-3 md:w-64"
+        class="info w-44 mx-3 md:w-64"
       >
         <h3>{{ infoBox.district }}</h3>
         <div class="subHeader">{{ infoBox.status }}</div>
