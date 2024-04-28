@@ -14,6 +14,7 @@ const url = import.meta.env.PROD ? import.meta.env.VITE_API_URL : "/api"
 let navNames = ref(["Home", "Rain Fall", "Subscribe"])
 
 onMounted(() => {
+  profile.getLoginStatus
   if (profile.getUserData.exp != undefined) {
     setInterval(() => {
       axios.post(`${url}/users/refresh`, {
