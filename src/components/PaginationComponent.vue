@@ -92,7 +92,7 @@ function navigate(page) {
     >
       &gt;
     </div>
-    <div class="pageSize">
+    <div class="pageSize flex place-items-center">
       <span class="opacity-50">SHOW</span>
       <select
         v-model="selectedSize"
