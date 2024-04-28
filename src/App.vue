@@ -96,9 +96,9 @@ function logout() {
       
         <button
           @click="showNav = !showNav"
-          class="menuBtn absolute flex place-items-center right-5 py-4"
+          class="menuBtn absolute flex place-items-center right-5 py-4 text-white"
         >
-        <span class="material-symbols-outlined pr-2">
+        <span class="material-symbols-outlined pr-2 text-white">
           close
         </span>
         
@@ -142,9 +142,9 @@ function logout() {
       </div>
       <button
         @click="showNav = !showNav"
-        class="menuBtn flex place-items-center p-4"
+        class="menuBtn flex place-items-center p-4 text-white"
       >
-      <span class="material-symbols-outlined pr-2">menu</span>
+      <span class="material-symbols-outlined pr-2 text-white">menu</span>
         Menu
       </button>
     </div>
