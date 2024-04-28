@@ -18,6 +18,7 @@ const isLoading = ref(true)
 const profile = userData()
 
 onMounted(() => {
+  profile.getLoginStatus
   if((localStorage.getItem('access_token') != null && profile.loginStatus != true) 
     || (localStorage.getItem('access_token') == null && profile.loginStatus != false)){
     window.location.reload()
