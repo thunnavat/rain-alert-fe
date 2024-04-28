@@ -5,29 +5,39 @@ import { ref } from "vue"
 import router from "./router"
 import { userData } from "./store/userData"
 import { onMounted } from "vue"
+import axios from "axios"
 
 const profile = userData()
 const showNav = ref(false)
+const url = import.meta.env.PROD ? import.meta.env.VITE_API_URL : "/api"
 
 let navNames = ref(["Home", "Rain Fall", "Subscribe"])
 
 onMounted(() => {
-  profile.getLoginStatus
-  if(profile.getUserData.exp != undefined){
+  if (profile.getUserData.exp != undefined) {
+    setInterval(() => {
+      axios.post(`${url}/users/refresh`, {
+        refreshToken: `${localStorage.getItem("refresh_token")}`
+      }).then(async(res) => {
+        localStorage.setItem("access_token", res.data.accessToken)
+        await profile.getProfile()
+          window.location.reload()
+      })
+    }, (profile.getUserData.exp * 1000 - Date.now()) - 10000)
     setTimeout(() => {
       alert("Time Out Please Log In Again")
       localStorage.removeItem("access_token")
-      if(localStorage.getItem('page') == 'Profile'){
+      if (localStorage.getItem("page") == "Profile") {
         router.push({ name: "Home" })
-      }else {
+      } else {
         window.location.reload()
       }
     }, profile.getUserData.exp * 1000 - Date.now())
   }
-  if(profile.getUserData.role == "ADMIN"){
-    navNames.value.push('Check Report')
-  }else if(profile.getUserData.role != "ADMIN"){
-    navNames.value.push('Report Bug')
+  if (profile.getUserData.role == "ADMIN") {
+    navNames.value.push("Check Report")
+  } else if (profile.getUserData.role != "ADMIN") {
+    navNames.value.push("Report Bug")
   }
 })
 
@@ -62,7 +72,6 @@ let ProfileIcon = {
   bgColor: "black"
 }
 
-
 let navSelected = ref(page)
 
 function login() {
@@ -87,22 +96,22 @@ function logout() {
 
 <template>
   <div>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    />
     <div class="header">
       <div
         class="navBar flex flex-col w-full xl:w-0 xl:flex-row sidenav"
         :class="showNav == true ? 'open' : 'close'"
       >
-      
         <button
           @click="showNav = !showNav"
           class="menuBtn absolute flex place-items-center right-5 py-4 text-white"
         >
-        <span class="material-symbols-outlined pr-2 text-white">
-          close
-        </span>
-        
-        Close
+          <span class="material-symbols-outlined pr-2 text-white"> close </span>
+
+          Close
         </button>
         <img
           src="./assets/HomeIcon.png"
@@ -126,7 +135,7 @@ function logout() {
         />
         <div
           v-else-if="profile.getUserData != 'Token not found'"
-          class=" w-full flex flex-col place-items-center justify-evenly "
+          class="w-full flex flex-col place-items-center justify-evenly"
         >
           <btn-component
             class="loginBtn xl:absolute bg-blue"
@@ -144,7 +153,7 @@ function logout() {
         @click="showNav = !showNav"
         class="menuBtn flex place-items-center p-4 text-white"
       >
-      <span class="material-symbols-outlined pr-2 text-white">menu</span>
+        <span class="material-symbols-outlined pr-2 text-white">menu</span>
         Menu
       </button>
     </div>

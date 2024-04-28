@@ -352,17 +352,17 @@ function changePassword() {
           </div>
           <ul class="text-sm text-left ">
             <li :class="newPass.length >= 8 ? 'text-green-600' : ''">
-              อย่างน้อย 8 ตัวอักษร
+              At Least 8 Characters
             </li>
-            <li :class="/\d/.test(newPass) ? 'text-green-600' : ''">ตัวเลข</li>
+            <li :class="/\d/.test(newPass) ? 'text-green-600' : ''">Number</li>
             <li :class="/[A-Z]/.test(newPass) ? 'text-green-600' : ''">
-              ตัวพิมพ์ใหญ่
+              Uppercase Characters
             </li>
             <li :class="/[a-z]/.test(newPass) ? 'text-green-600' : ''">
-              ตัวพิมพ์เล็ก
+              Lowercase Characters
             </li>
             <li :class="/(?=.*[\W_])/.test(newPass) ? 'text-green-600' : ''">
-              อักขระพิเศษ
+              Special Characters
             </li>
           </ul>
           <div class="formText pt-6 pb-11">

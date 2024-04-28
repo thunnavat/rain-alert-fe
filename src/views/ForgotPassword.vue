@@ -74,17 +74,17 @@ function resetPs() {
             />
             <ul class="text-sm text-left ">
             <li :class="passWord.length >= 8 ? 'text-green-600' : ''">
-              อย่างน้อย 8 ตัวอักษร
+              At Least 8 Characters
             </li>
-            <li :class="/\d/.test(passWord) ? 'text-green-600' : ''">ตัวเลข</li>
+            <li :class="/\d/.test(passWord) ? 'text-green-600' : ''">Number</li>
             <li :class="/[A-Z]/.test(passWord) ? 'text-green-600' : ''">
-              ตัวพิมพ์ใหญ่
+              Uppercase Characters
             </li>
             <li :class="/[a-z]/.test(passWord) ? 'text-green-600' : ''">
-              ตัวพิมพ์เล็ก
+              Lowercase Characters
             </li>
             <li :class="/(?=.*[\W_])/.test(passWord) ? 'text-green-600' : ''">
-              อักขระพิเศษ
+              Special Characters
             </li>
           </ul>
           </div>
