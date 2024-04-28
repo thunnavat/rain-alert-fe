@@ -7,7 +7,7 @@
   font-family: "Exo 2";
   line-height: 1.5;
   font-weight: 600;
-
+  
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
   background-color: black;
@@ -67,6 +67,10 @@ button:focus-visible {
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+}
+
+input {
+  color: white
 }
 
 /* @media (prefers-color-scheme: light) {
